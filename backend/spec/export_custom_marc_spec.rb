@@ -232,7 +232,7 @@ describe 'NYU Custom Marcxml Export' do
 			let(:ids) { ['id0', 'id1', 'id2', 'id3'] }
 			let(:top_container) { create(:json_top_container) }
 			it "concatenates 'id0' to 'id1' in subfield 'j'
-			if there is two parts in the identifier" do
+			if there are two parts in the identifier" do
 				resource = create_resource_with_repo_id(repo_id,
 				{ :id_0 => ids[0],
 					:id_1 => ids[1] })
@@ -242,7 +242,7 @@ describe 'NYU Custom Marcxml Export' do
 				end
 
 				it "concatenates 'id0', 'id1', and 'id2' in subfield 'j'
-				if there is three parts in the identifier" do
+				if there are three parts in the identifier" do
 					resource = create_resource_with_repo_id(repo_id,
 					{ :id_0 => ids[0],
 						:id_1 => ids[1],

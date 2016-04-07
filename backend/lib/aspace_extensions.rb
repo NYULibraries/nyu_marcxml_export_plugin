@@ -1,8 +1,6 @@
 module ExportHelpers
 
   ASpaceExport::init
-  
-
 
   def generate_marc(id)
     obj = resolve_references(Resource.to_jsonmodel(id),

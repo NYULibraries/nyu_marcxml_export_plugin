@@ -1,22 +1,23 @@
 module ExportHelpers
 
   ASpaceExport::init
-  
-
 
   def generate_marc(id)
     obj = resolve_references(Resource.to_jsonmodel(id),
     ['repository', 'linked_agents', 'subjects',
       'tree'])
-      related_objects = obj['tree']['_resolved']['children']
+      related_objects = get_related_objects(obj)
       containers = get_related_containers(related_objects) if related_objects
-
       if containers
         top_containers = get_top_containers(containers)
         obj[:top_containers]= get_locations(top_containers)
       end
       marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(obj))
       ASpaceExport::serialize(marc)
+    end
+
+    def get_related_objects(obj)
+      obj['tree']['_resolved']['children']
     end
 
     def get_related_containers(related_objects)
@@ -29,11 +30,17 @@ module ExportHelpers
       related_containers
     end
 
+    def get_top_container_id(url)
+      info = url.split('/')[4]
+      info.to_i
+    end
+
     def get_top_containers(related_containers)
       top_containers = {}
       related_containers.each{ |containers|
         containers.each{ |t|
-          tc_id = t['sub_container']['top_container']['ref'].split('/')[4].to_i
+          ref = t['sub_container']['top_container']['ref']
+          tc_id = get_top_container_id(ref)
           barcode =  t['sub_container']['top_container']['_resolved']['barcode']
           indicator = t['sub_container']['top_container']['_resolved']['indicator']
           bc = {barcode: barcode} if barcode

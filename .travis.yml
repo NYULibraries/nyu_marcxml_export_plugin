@@ -22,7 +22,6 @@ before_script:
 - git clone --branch v1.4.5-nyudev01 https://github.com/NYULibraries/archivesspace.git 
 - ln -s $PWD archivesspace/plugins
 - echo "AppConfig[:plugins] << 'nyu_marcxml_export_plugin' " > archivesspace/common/config/config.rb
-- cp build.xml archivesspace/build
 branches:
   except:
   - gh-pages

@@ -542,6 +542,35 @@
     <antcall target="db:migrate" />
     <antcall target="backend:test" />
   </target>
+ 
+ <target name="travis:plugin:backend:test" depends="set-classpath, bootstrap">
+    <antcall target="db:migrate" />
+    <antcall target="plugin:backend:test" />
+  </target>
+  
+   <!-- Run the tests from a plugin directory -->
+  <target name="plugin:backend:test" depends="set-classpath" description="Run the unit test suite">
+    <property name="spec" value=""/>
+    <property name="example" value=""/>
+    <condition property="example-arg" value="-e &quot;${example}&quot;" else="">
+      <isset property="example"/>
+    </condition>
+    <dirset id="plugins" dir="../..">
+      <include name="backend/spec"/>
+      <include name="archivesspace/plugins/**/backend/spec" />
+    </dirset>
+    <pathconvert pathsep=" " property="plugin-spec-dirs" refid="plugins"/>
+    <java classpath="${jruby_classpath}" classname="org.jruby.Main" fork="true"
+          failonerror="true"
+          dir="../backend">
+      <jvmarg line="${default_java_options} ${env.JAVA_OPTS}"/>
+      <env key="GEM_HOME" value="${gem_home}" />
+      <env key="GEM_PATH" value="" />
+      <env key="BUNDLE_PATH" value="${gem_home}" />
+      <env key="COVERAGE_REPORTS" value="${COVERAGE_REPORTS}" />
+      <arg line="--1.9 --debug -X-C ../build/gems/bin/rspec -b --format d -P '*_spec.rb' --order rand:1 ${example-arg} ${plugin-spec-dirs}" />
+    </java>
+  </target>
 
   <!-- Dist build -->
   <target name="build-zip" depends="set-classpath"

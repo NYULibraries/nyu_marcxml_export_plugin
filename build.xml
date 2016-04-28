@@ -542,12 +542,12 @@
     <antcall target="db:migrate" />
     <antcall target="backend:test" />
   </target>
- 
+
  <target name="travis:plugin:backend:test" depends="set-classpath, bootstrap">
     <antcall target="db:migrate" />
-    <antcall target="plugin:backend:test" />
+    <antcall target="plugin:backend:test -Dexample='NYU Custom Marcxml Export'" />
   </target>
-  
+
    <!-- Run the tests from a plugin directory -->
   <target name="plugin:backend:test" depends="set-classpath" description="Run the unit test suite">
     <property name="spec" value=""/>

@@ -7,7 +7,7 @@ env:
   global:
   - INTEGRATION_LOGFILE=/var/tmp/aspace-integration.log
   matrix:
-  - DB=mysql TASK=travis:test
+  - DB=mysql TASK=travis:backend:test
   - TASK=dist
 before_script:
 - sleep 3
@@ -21,6 +21,7 @@ before_script:
 - git clone --branch v1.4.5-nyudev01 https://github.com/NYULibraries/archivesspace.git 
 - ln -s $PWD archivesspace/plugins
 - echo "AppConfig[:plugins] << 'nyu_marcxml_export_plugin' " > archivesspace/common/config/config.rb
+- cp build.xml archivesspace/build
 branches:
   except:
   - gh-pages

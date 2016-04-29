@@ -5,7 +5,7 @@ env:
   global:
   - INTEGRATION_LOGFILE=/var/tmp/aspace-integration.log
   matrix:
-  - DB=mysql TASK=travis:plugin:backend:test
+  - DB=mysql TASK=travis:backend:test
   - TASK=dist
 before_script:
 - sleep 3

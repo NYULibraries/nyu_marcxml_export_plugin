@@ -545,7 +545,7 @@
 
  <target name="travis:plugin:backend:test" depends="set-classpath, bootstrap">
     <antcall target="db:migrate" />
-    <antcall target="plugin:backend:test'" />
+    <antcall target="plugin:backend:test" />
   </target>
 
    <!-- Run the tests from a plugin directory -->

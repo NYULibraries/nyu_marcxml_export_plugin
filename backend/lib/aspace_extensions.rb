@@ -96,8 +96,8 @@ module ExportHelpers
     end
 
     # location metadata
-    def get_location_metadata(data)
-      obj = resolve_references(TopContainer.to_jsonmodel(data),
+    def get_location_metadata(id)
+      obj = resolve_references(TopContainer.to_jsonmodel(id),
       ['container_locations'])
       location = obj['container_locations'][0]
       location['_resolved']['building'] if location
@@ -106,13 +106,13 @@ module ExportHelpers
     def get_locations(top_containers)
       location = {}
       tc = top_containers.dup
-      top_containers.each_key { |t|
+      top_containers.each_key { |id|
         # if there's location information
         # continue processing
-        building = get_location_metadata(t)
+        building = get_location_metadata(id)
         if  building
           location = {location: building}
-          tc[t] = top_containers[t].merge(location)
+          tc[id] = top_containers[id].merge(location)
         end
       }
       tc

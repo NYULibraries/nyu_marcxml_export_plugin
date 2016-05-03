@@ -20,7 +20,7 @@ before_script:
 - dir_name=${PWD##*/}
 - echo $dir_name
 - mkdir -p archivesspace/plugins/$dir_name/backend
-- cp -r backend/ archivesspace/plugins/$dir_name/backend
+- cp -r backend/* archivesspace/plugins/$dir_name/backend
 - echo "AppConfig[:plugins] = ['$dir_name']"  > archivesspace/common/config/config.rb
 - cp build.xml archivesspace/build
 branches:

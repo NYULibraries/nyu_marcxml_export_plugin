@@ -11,7 +11,7 @@ module ExportHelpers
       # is an array of hashes and the hashes
       # are nested, grabbing the ids from the
       # lowest level
-      related_objects_ids = get_related_objects(obj)
+      related_objects_ids = get_related_object_ids(obj)
 
       # grabbing containers for those ids
       containers = get_related_containers(related_objects_ids) if related_objects_ids
@@ -27,14 +27,14 @@ module ExportHelpers
 
     # getting ids of all archival objects
     # that might contain top container references
-    def get_related_objects(obj)
+    def get_related_object_ids(obj)
       object_ids = []
       objects = obj['tree']['_resolved']['children']
       objects.each { |object|
         # if nested hash
         if object['has_children']
           # send array of those hashes
-          get_objects(object['children'],object_ids)
+          get_object_ids(object['children'],object_ids)
         else
           # not a nested hash
           object_ids << object['id']
@@ -44,8 +44,8 @@ module ExportHelpers
     end
 
     # recursively iterating through
-    # n nested levels
-    def get_objects(tree,ids)
+    # n nested levels of archival object hashes
+    def get_object_ids(tree,ids)
       tree.each { |items|
         if items["has_children"]
           get_objects(items['children'],ids)

@@ -16,8 +16,11 @@ before_script:
 - if [[ "$DB" == "mysql" ]]; then mysql -e "create database archivesspace default
   character set utf8;"; fi
 - 'export JAVA_OPTS="-Xmx1G $JAVA_OPTS"'
-- git clone --branch v1.4.5-nyudev01 https://github.com/NYULibraries/archivesspace.git 
-- ln -s $PWD archivesspace/plugins
+- git clone --branch v1.4.5-nyudev01 https://github.com/NYULibraries/archivesspace.git
+- dir_name=${PWD##*/}
+- echo $dir_name
+- mkdir -p archivesspace/plugins/$dir_name/backend
+- cp -r backend/ archivesspace/plugins/$dir_name/backend
 - echo "AppConfig[:plugins] << 'nyu_marcxml_export_plugin' " > archivesspace/common/config/config.rb
 - cp build.xml archivesspace/build
 branches:

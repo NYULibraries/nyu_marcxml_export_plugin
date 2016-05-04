@@ -23,9 +23,8 @@ before_script:
 - cp -r backend/* archivesspace/plugins/$dir_name/backend
 - echo "AppConfig[:plugins] = ['$dir_name']"  > archivesspace/common/config/config.rb
 - cp build.xml archivesspace/build
-branches:
-  except:
-  - gh-pages
+notifications:
+  slack: nyu-dlts:soXKrVQlFYngL6O9HvlcZFz2
 script:
 - archivesspace/build/run $TASK $TASK_OPTS
 sudo: false

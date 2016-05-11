@@ -1,6 +1,8 @@
 language: java
 jdk:
 - openjdk7
+- oraclejdk7
+- oraclejdk8
 env:
   global:
   - INTEGRATION_LOGFILE=/var/tmp/aspace-integration.log

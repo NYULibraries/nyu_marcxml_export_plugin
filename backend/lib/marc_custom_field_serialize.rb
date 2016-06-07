@@ -23,6 +23,7 @@ class MARCCustomFieldSerialize
 
   def datafields
     extra_fields = []
+    extra_fields << add_035_tag
     extra_fields << add_853_tag
     if @record.aspace_record['top_containers']
       top_containers = @record.aspace_record['top_containers']
@@ -55,9 +56,16 @@ class MARCCustomFieldSerialize
     cf.add_controlfield_tag
   end
 
+  def add_035_tag
+    value = "(#{get_record_repo_value})#{check_multiple_ids}-#{format_timestamp('date')}"
+    subfields_hsh = {}
+    datafield_hsh = get_datafield_hash('035','','')
+    subfields_hsh[1] = get_subfield_hash('a',value)
+    datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
+    datafield.add_datafield_tag
+  end
   def add_853_tag
     subfields_hsh = {}
-    datafields_hsh = {}
     datafield_hsh = get_datafield_hash('853','0','0')
     # have to have a hash by position as the key
     # since the subfield positions matter
@@ -86,7 +94,7 @@ class MARCCustomFieldSerialize
     # since the subfield positions matter
     subfields_hsh[1] = get_subfield_hash('a','NNU')
     subfields_hsh[4] = get_subfield_hash('t','4')
-    subfields_hsh[5] = check_multiple_ids
+    subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
     subfields_hsh[7] = get_subfield_hash('i','04')
     subfields_hsh[8] = get_location(info[:location])
@@ -100,11 +108,8 @@ class MARCCustomFieldSerialize
   end
 
   def get_record_repo_value
-    # returning the repo value from the record
-    # in a consistent case
     code = @record.aspace_record['repository']['_resolved']['repo_code']
-    value = code == code.downcase ? code : code.downcase
-    value
+    code
   end
 
   def get_allowed_values
@@ -117,7 +122,10 @@ class MARCCustomFieldSerialize
 
   def get_repo_code_values
     repo_code = nil
-    record_repo_value = get_record_repo_value
+    repo_value = get_record_repo_value
+    # returning the repo value from the record
+    # in a consistent case
+    record_repo_value = repo_value.downcase ? repo_value : repo_value.downcase
     # get valid values
     allowed_values = get_allowed_values
     # get subfield values for repo codes
@@ -161,9 +169,11 @@ class MARCCustomFieldSerialize
     end
     # if no other ids, assign id_0 else assign the whole array of ids
     j_id = j_other_ids.size == 0 ? j_id : j_other_ids
-    # creating a subfield hash
-    get_subfield_hash('j',j_id)
+  end
 
+  def generate_subfield_j
+    id = check_multiple_ids
+    get_subfield_hash('j',id)
   end
 
   def get_location(location_info)
@@ -175,9 +185,18 @@ class MARCCustomFieldSerialize
     get_subfield_hash('s',location)
   end
 
-  def format_timestamp
+  def format_timestamp(type = 'timestamp')
     ts = @record.aspace_record['user_mtime']
-    formatted_ts = ts.gsub(/-|T|:|Z/,"") + ".0"
-    formatted_ts
+    value = nil
+    case type
+    when 'timestamp'
+      value = ts.gsub(/-|T|:|Z/,"") + ".0"
+    when 'date'
+      value = ts.split('T')[0]
+      value = value.gsub('-','')
+    end
+    raise "ERROR: incorrect argument passed: #{type}. Should be either date or timestamp" if value.nil?
+
+    value
   end
 end

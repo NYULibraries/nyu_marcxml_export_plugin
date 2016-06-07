@@ -49,9 +49,8 @@ class MARCCustomFieldSerialize
 
 
   def add_005_tag
-    date_time = @record.aspace_record['user_mtime']
-    formatted_dt = date_time.gsub(/-|T|:|Z/,"") + ".0"
-    controlfield_hsh = get_controlfield_hash('005',formatted_dt)
+    value = format_timestamp
+    controlfield_hsh = get_controlfield_hash('005',value)
     cf = NYUCustomTag.new(controlfield_hsh)
     cf.add_controlfield_tag
   end
@@ -176,4 +175,9 @@ class MARCCustomFieldSerialize
     get_subfield_hash('s',location)
   end
 
+  def format_timestamp
+    ts = @record.aspace_record['user_mtime']
+    formatted_ts = ts.gsub(/-|T|:|Z/,"") + ".0"
+    formatted_ts
+  end
 end

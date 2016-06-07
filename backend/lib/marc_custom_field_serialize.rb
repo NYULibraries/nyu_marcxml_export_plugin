@@ -5,7 +5,6 @@ class MARCCustomFieldSerialize
 
   def initialize(record)
     @record = record
-
   end
 
   def leader_string
@@ -14,6 +13,12 @@ class MARCCustomFieldSerialize
 
   def controlfield_string
     result = @record.controlfield_string
+  end
+
+  def controlfields
+    cf = []
+    cf << add_005_tag
+    @record.controlfields = cf
   end
 
   def datafields
@@ -38,6 +43,17 @@ class MARCCustomFieldSerialize
     {code:code, value:value}
   end
 
+  def get_controlfield_hash(tag,text)
+    {tag:tag, text: text}
+  end
+
+
+  def add_005_tag
+    controlfield_hsh = get_controlfield_hash('005',@record.aspace_record['user_mtime'])
+    cf = NYUCustomTag.new(controlfield_hsh)
+    cf.add_controlfield_tag
+  end
+
   def add_853_tag
     subfields_hsh = {}
     datafields_hsh = {}
@@ -47,7 +63,7 @@ class MARCCustomFieldSerialize
     subfields_hsh[1] = get_subfield_hash('8','1')
     subfields_hsh[2] = get_subfield_hash('a','Box')
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
-    datafield.add_tag
+    datafield.add_datafield_tag
   end
 
   def add_863_tag(info)
@@ -59,7 +75,7 @@ class MARCCustomFieldSerialize
     subfields_hsh[2] = get_subfield_hash('a',info[:indicator])
     subfields_hsh[3] = get_subfield_hash('p',info[:barcode]) if info[:barcode]
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
-    datafield.add_tag
+    datafield.add_datafield_tag
   end
 
   def add_949_tag(info)
@@ -79,7 +95,7 @@ class MARCCustomFieldSerialize
     # merge repo code hash with existing subfield code hash
     subfields_hsh.merge!(process_repo_code)
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
-    datafield.add_tag
+    datafield.add_datafield_tag
   end
 
   def get_record_repo_value

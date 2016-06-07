@@ -52,6 +52,17 @@ end
 
 describe 'NYU Custom Marcxml Export' do
 
+	describe 'controlfield 005 mapping' do
+		let (:repo_code) { 'tamwag' }
+		let (:repo_id) { make_test_repo(code = repo_code) }
+		let (:resource) { create_resource_with_repo_id(repo_id) }
+		let (:marc) { get_marc(resource) }
+		let (:tag) { "controlfield[@tag='005']" }
+
+		it "should have 005 tag" do
+			marc.should have_tag("#{tag}")
+		end
+	end
 	describe 'datafield 853 mapping' do
 		let (:repo_code) { 'tamwag' }
 		let (:repo_id) { make_test_repo(code = repo_code) }

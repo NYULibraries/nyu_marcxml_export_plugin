@@ -50,7 +50,7 @@ def generate_subfields_position_hash(tag)
 	subfields[tag]
 end
 
-describe 'NYU Custom Marcxml Export' do
+describe 'NYU Custom MARC Export' do
 
 	describe 'controlfield 005 mapping' do
 		let (:repo_code) { 'tamwag' }

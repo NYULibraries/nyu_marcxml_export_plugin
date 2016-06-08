@@ -1,19 +1,19 @@
 class NYUCustomTag
   attr_reader :tag_info, :subfield_info
 
-  def initialize(tag_info,subfield_info)
+  def initialize(tag_info, *args)
     @tag_info = tag_info
-    @subfield_info = subfield_info
+    @subfield_info = args.shift
     @error_messages = []
-    # validates tag and subfield hashes
     check_class_arguments
-    @tag= tag_info[:tag]
-    @ind1 = tag_info[:ind1]
-    @ind2 = tag_info[:ind2]
   end
 
-  def add_tag
+  def add_datafield_tag
     set_datafield
+  end
+
+  def add_controlfield_tag
+    set_controlfield
   end
 
   private
@@ -33,12 +33,20 @@ class NYUCustomTag
     def set_datafield
       datafield = Struct.new(:tag, :ind1, :ind2, :subfields)
       subfields = set_subfields
-      datafield.new(@tag,@ind1,@ind2,subfields)
+      tag = @tag_info[:tag]
+      ind1 = @tag_info[:ind1]
+      ind2 = @tag_info[:ind2]
+      datafield.new(tag,ind1,ind2,subfields)
+    end
+
+    def set_controlfield
+      controlfield = Struct.new(:tag, :text)
+      controlfield.new(@tag_info[:tag],@tag_info[:text])
     end
 
     def check_class_arguments
       check_tag_info
-      check_subfield_info
+      check_subfield_info if @subfield_info
       unless @error_messages.empty?
         get_err_messages
       end
@@ -46,13 +54,38 @@ class NYUCustomTag
 
     def check_tag_info
       check_data_type(@tag_info)
-      valid_values = [:tag,:ind1,:ind2]
+      if @tag_info.keys.size == 2
+        check_controlfield_hash
+      else
+        check_datafield_hash
+      end
+    end
+
+    def check_controlfield_hash
+      valid_values = valid_controlfield_values
       is_valid?(@tag_info.keys,valid_values)
+    end
+
+    def check_datafield_hash
+      valid_values = valid_datafield_values
+      is_valid?(@tag_info.keys,valid_values)
+    end
+
+    def valid_controlfield_values
+      [:tag, :text]
+    end
+
+    def valid_datafield_values
+      [:tag, :ind1, :ind2]
+    end
+
+    def valid_subfield_values
+      [:code, :value]
     end
 
     def check_subfield_info
       check_data_type(@subfield_info)
-      valid_values = [:code,:value]
+      valid_values = valid_subfield_values
       @subfield_info.each_pair { |k,hsh|
         unless k.is_a?(Integer)
           err = "ERROR: subfield hash needs integers for keys: #{k}"

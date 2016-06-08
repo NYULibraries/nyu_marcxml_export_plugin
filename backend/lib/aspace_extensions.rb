@@ -121,9 +121,11 @@ module ExportHelpers
 
   class MARCModel < ASpaceExport::ExportModel
     attr_reader :aspace_record
+    attr_accessor :controlfields
 
     def initialize(obj)
       @datafields = {}
+      @controlfields = {}
       @aspace_record = obj
     end
 

@@ -1,5 +1,5 @@
 class MARCCustomFieldSerialize
-  
+
   def initialize(record)
     @record = record
   end
@@ -20,18 +20,62 @@ class MARCCustomFieldSerialize
 
   def datafields
     extra_fields = []
+    @field_pairs = []
     extra_fields << add_035_tag
     extra_fields << add_853_tag
     if @record.aspace_record['top_containers']
       top_containers = @record.aspace_record['top_containers']
       top_containers.each_key{ |id|
         info = top_containers[id]
-        extra_fields << add_863_tag(info)
-        extra_fields << add_949_tag(info)
+        @field_pairs << add_863_tag(info)
+        @field_pairs << add_949_tag(info)
       }
     end
-    (@record.datafields + extra_fields).sort_by(&:tag)
+    @sort_combined = (@record.datafields + extra_fields).sort_by(&:tag)
+    # 863 and 949 pairs are not to be sorted
+    # sticking them at the end since the highest tag
+    # before 863 is 856
+    # this is a hard coded assumption but it's faster
+    # There is a method below that does not have that assumption
+    # Will call in case things change in marc record
+    @sort_combined + @field_pairs
+
+    # the method below is in case there are
+    # marc tags higher than 863 in the marc record
+    # and the pairs need to be inserted in order
+    # not calling this now because it's slower
+    # arrange_datafields
   end
+
+  def arrange_datafields
+    min_tag = 863
+    last_index = nil
+    final_results = []
+    # Assumed that sort_combined is sorted
+    # in tag order 
+    @sort_combined.each_with_index do |f,i|
+      last_index = i if f.tag.to_i < min_tag
+    end
+    if last_index == @sort_combined.index(@sort_combined.last)
+      final_results = @sort_combined + @field_pairs
+    elsif last_index < @sort_combined.index(@sort_combined.last)
+      #slice and dice
+      temp_array = []
+      @sort_combined.slice(0..last_index).each do |i|
+        temp_array << i
+      end
+      @field_pairs.each { |f| temp_array << f }
+      start = last_index + 1
+      array_last_index = @sort_combined.index(@sort_combined.last)
+      final_results = temp_array + @sort_combined.slice(start..array_last_index)
+    else
+      raise "ERROR: Please check data"
+    end
+
+    final_results
+
+  end
+
 
   def get_datafield_hash(tag,ind1,ind2)
     {tag: tag, ind1: ind1, ind2: ind2}

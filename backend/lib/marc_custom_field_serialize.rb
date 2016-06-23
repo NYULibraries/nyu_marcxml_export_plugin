@@ -52,7 +52,7 @@ class MARCCustomFieldSerialize
     last_index = nil
     final_results = []
     # Assumed that sort_combined is sorted
-    # in tag order 
+    # in tag order
     @sort_combined.each_with_index do |f,i|
       last_index = i if f.tag.to_i < min_tag
     end
@@ -98,13 +98,15 @@ class MARCCustomFieldSerialize
   end
 
   def add_035_tag
-    value = "(#{get_record_repo_value})#{check_multiple_ids}-#{format_timestamp('date')}"
+    org_code = get_repo_org_code
+    value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('035','','')
     subfields_hsh[1] = get_subfield_hash('a',value)
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
+
   def add_853_tag
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('853','0','0')
@@ -146,6 +148,10 @@ class MARCCustomFieldSerialize
     subfields_hsh.merge!(process_repo_code)
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
+  end
+
+  def get_repo_org_code
+    @record.aspace_record['repository']['_resolved']['org_code']
   end
 
   def get_record_repo_value

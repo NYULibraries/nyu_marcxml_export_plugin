@@ -50,6 +50,21 @@ def generate_subfields_position_hash(tag)
 	subfields[tag]
 end
 
+def format_timestamp(date, type = 'date')
+	ts = date
+	value = nil
+	case type
+	when 'timestamp'
+		value = ts.gsub(/-|T|:|Z/,"") + ".0"
+	when 'date'
+		value = ts.split(' ')[0]
+		value = value.gsub('-','')
+	end
+	raise "ERROR: incorrect argument passed: #{type}. Should be either date or timestamp" if value.nil?
+
+	value
+end
+
 describe 'NYU Custom MARC Export' do
 
 	describe 'controlfield 005 mapping' do
@@ -66,13 +81,17 @@ describe 'NYU Custom MARC Export' do
 
 	describe 'datafield 035 mapping' do
 		let (:repo_code) { 'tamwag' }
-		let (:repo_id) { make_test_repo(code = repo_code) }
+		let (:orgcode) { 'NNU-TL' }
+		let (:repo_id) { make_test_repo(code = repo_code, org_code = orgcode) }
 		let (:resource) { create_resource_with_repo_id(repo_id) }
 		let (:marc) { get_marc(resource) }
+		let(:resource_id) { resource[:identifier].split('"')[1] }
+		let(:date) { format_timestamp(resource[:user_mtime].to_s) }
 		let (:tag) { "datafield[@tag='035']" }
 
 		it "should have 035 tag" do
-			marc.should have_tag("#{tag}")
+			value = "(#{orgcode})#{resource_id}-#{date}"
+			marc.should have_tag ("#{tag}/subfield[@code='a']") => value
 		end
 	end
 

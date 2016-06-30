@@ -8,7 +8,6 @@ env:
   - INTEGRATION_LOGFILE=/var/tmp/aspace-integration.log
   matrix:
   - DB=mysql TASK=travis:backend:test
-  - TASK=dist
 before_script:
 - sleep 3
 - if [[ "$DB" == "mysql" ]]; then (mkdir lib; cd lib; curl -Oq http://central.maven.org/maven2/mysql/mysql-connector-java/5.1.34/mysql-connector-java-5.1.34.jar);
@@ -18,7 +17,7 @@ before_script:
 - if [[ "$DB" == "mysql" ]]; then mysql -e "create database archivesspace default
   character set utf8;"; fi
 - 'export JAVA_OPTS="-Xmx1G $JAVA_OPTS"'
-- git clone --branch v1.4.5-nyudev02-changed-rspec-tests https://github.com/NYULibraries/archivesspace.git
+- git clone --branch 1.5-rc3-changed-rspec-tests https://github.com/NYULibraries/archivesspace.git
 - dir_name=${PWD##*/}
 - echo $dir_name
 - mkdir -p archivesspace/plugins/$dir_name/backend

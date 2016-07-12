@@ -48,7 +48,7 @@ module ExportHelpers
     def get_object_ids(tree,ids)
       tree.each { |items|
         if items["has_children"]
-          get_objects(items['children'],ids)
+          get_object_ids(items['children'],ids)
         else
           ids << items['id']
         end

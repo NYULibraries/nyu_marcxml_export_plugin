@@ -4,8 +4,13 @@ module ExportHelpers
 
   def generate_marc(id)
     obj = resolve_references(Resource.to_jsonmodel(id),
-    ['repository', 'linked_agents', 'subjects',
+    ['repository', 'linked_agents', 'subjects', 'instances',
       'tree'])
+      repo_code = obj['repository']['_resolved']['repo_code']
+      @top_level_containers = nil
+      @nested_containers = nil
+      top_level = get_top_resource_level_uris(obj['instances']) unless repo_code =~ /ASPACE/
+      @top_level_containers = get_locations(top_level) if top_level
       # getting all ids for archival objects
       # at the lowest level, i.e. if there
       # is an array of hashes and the hashes
@@ -19,12 +24,40 @@ module ExportHelpers
       # get top containers
       if containers
         top_containers = get_top_containers(containers)
-        obj[:top_containers]= get_locations(top_containers)
+        @nested_containers = get_locations(top_containers)
       end
+      tc_hash = combine_everything
+      obj['top_containers'] = tc_hash unless tc_hash.nil?
       marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(obj))
       ASpaceExport::serialize(marc)
+
     end
 
+    def combine_everything
+      hash = nil
+      if @top_level_containers && @nested_containers
+        hash = @top_level_containers.merge(@nested_containers)
+      elsif @top_level_containers.nil? && @nested_containers
+        hash = @nested_containers
+      elsif @top_level_containers && @nested_containers.nil?
+        hash = @top_level_containers
+      end
+      hash
+    end
+
+    def get_top_resource_level_uris(instances)
+      tc_hash = {}
+      instances.each { |i|
+        url = i['sub_container']['top_container']['ref']
+        id = get_top_container_id(url)
+        # can just get the hash by passig nil
+        top_container = resolve_references(TopContainer.to_jsonmodel(id),nil)
+        hash = {indicator: top_container['indicator'] }
+        barcode = top_container['barcode']
+        tc_hash[id] = barcode.nil? ? hash : hash.merge({ barcode: barcode })
+      }
+      tc_hash
+    end
     # getting ids of all archival objects
     # that might contain top container references
     def get_related_object_ids(obj)
@@ -120,7 +153,7 @@ module ExportHelpers
   end
 
   class MARCModel < ASpaceExport::ExportModel
-    attr_reader :aspace_record
+    attr_reader :aspace_record, :top_containers
     attr_accessor :controlfields
 
     def initialize(obj)
@@ -133,5 +166,7 @@ module ExportHelpers
     def self.from_aspace_object(obj)
       self.new(obj)
     end
+
+
 
   end

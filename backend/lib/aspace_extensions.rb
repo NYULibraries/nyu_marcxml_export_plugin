@@ -6,9 +6,11 @@ module ExportHelpers
     obj = resolve_references(Resource.to_jsonmodel(id),
     ['repository', 'linked_agents', 'subjects', 'instances',
       'tree'])
-
-      top_level = get_top_resource_level_uris(obj['instances'])
-      obj['top_containers'] = get_locations(top_level)
+      repo_code = obj['repository']['_resolved']['repo_code']
+      @top_level_containers = nil
+      @nested_containers = nil
+      top_level = get_top_resource_level_uris(obj['instances']) unless repo_code =~ /ASPACE/
+      @top_level_containers = get_locations(top_level) if top_level
       # getting all ids for archival objects
       # at the lowest level, i.e. if there
       # is an array of hashes and the hashes
@@ -22,17 +24,25 @@ module ExportHelpers
       # get top containers
       if containers
         top_containers = get_top_containers(containers)
-        nested_top_containers = get_locations(top_containers)
-        #obj['top_containers'] = obj['top_containers'] ? obj['top_containers'].merge(nested_top_containers) : nested_top_containers
-        obj['top_containers'] = combine_everything(obj['top_containers'],nested_top_containers)
+        @nested_containers = get_locations(top_containers)
       end
+      tc_hash = combine_everything
+      obj['top_containers'] = tc_hash unless tc_hash.nil?
       marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(obj))
       ASpaceExport::serialize(marc)
+
     end
 
-    def combine_everything(top_level, nested_top_containers)
-      hash = {}
-      hash = top_level ? top_level.merge(nested_top_containers) : nested_top_containers
+    def combine_everything
+      hash = nil
+      if @top_level_containers && @nested_containers
+        hash = @top_level_containers.merge(@nested_containers)
+      elsif @top_level_containers.nil? && @nested_containers
+        hash = @nested_containers
+      elsif @top_level_containers && @nested_containers.nil?
+        hash = @top_level_containers
+      end
+      hash
     end
 
     def get_top_resource_level_uris(instances)
@@ -143,7 +153,7 @@ module ExportHelpers
   end
 
   class MARCModel < ASpaceExport::ExportModel
-    attr_reader :aspace_record
+    attr_reader :aspace_record, :top_containers
     attr_accessor :controlfields
 
     def initialize(obj)
@@ -156,5 +166,7 @@ module ExportHelpers
     def self.from_aspace_object(obj)
       self.new(obj)
     end
+
+
 
   end

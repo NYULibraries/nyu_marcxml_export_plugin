@@ -6,6 +6,10 @@ class MARCCustomFieldSerialize
 
   def leader_string
     result = @record.leader_string
+    #changing 8th position to 'a'
+    result[8] = 'a'
+    result
+
   end
 
   def controlfield_string
@@ -39,6 +43,7 @@ class MARCCustomFieldSerialize
     # There is a method below that does not have that assumption
     # Will call in case things change in marc record
     @sort_combined + @field_pairs
+
 
     # the method below is in case there are
     # marc tags higher than 863 in the marc record

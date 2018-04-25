@@ -18,6 +18,9 @@ class MARCCustomFieldSerialize
 
   def controlfields
     cf = []
+    org_codes = %w(NNU-TL NNU-F NyNyUA)
+    org_code = get_repo_org_code
+    cf << add_003_tag(org_code) if org_codes.include?(org_code)
     cf << add_005_tag
     @record.controlfields = cf
   end
@@ -98,6 +101,12 @@ class MARCCustomFieldSerialize
   def add_005_tag
     value = format_timestamp
     controlfield_hsh = get_controlfield_hash('005',value)
+    cf = NYUCustomTag.new(controlfield_hsh)
+    cf.add_controlfield_tag
+  end
+
+  def add_003_tag(org_code)
+    controlfield_hsh = get_controlfield_hash('003',org_code)
     cf = NYUCustomTag.new(controlfield_hsh)
     cf.add_controlfield_tag
   end

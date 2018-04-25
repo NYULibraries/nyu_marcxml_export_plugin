@@ -182,6 +182,49 @@ class MARCModel < ASpaceExport::ExportModel
 
   end
 
+  def handle_subjects(subjects)
+    subjects.each do |link|
+      subject = link['_resolved']
+      term, *terms = subject['terms']
+      code, ind2 =  case term['term_type']
+                    when 'uniform_title'
+                      ['630', source_to_code(subject['source'])]
+                    when 'temporal'
+                      ['648', source_to_code(subject['source'])]
+                    when 'topical'
+                      ['650', source_to_code(subject['source'])]
+                    when 'geographic', 'cultural_context'
+                      ['651', source_to_code(subject['source'])]
+                    when 'genre_form', 'style_period'
+                      ['655', source_to_code(subject['source'])]
+                    when 'occupation'
+                      ['656', '7']
+                    when 'function'
+                      ['656', '7']
+                    else
+                      ['650', source_to_code(subject['source'])]
+                    end
+
+      sfs = [['a', term['term']]]
+
+      terms.each do |t|
+        tag = case t['term_type']
+              when 'uniform_title'; 't'
+              when 'genre_form', 'style_period'; 'v'
+              when 'topical', 'cultural_context'; 'x'
+              when 'temporal'; 'y'
+              when 'geographic'; 'z'
+              end
+        sfs << [tag, t['term']]
+      end
+
+      if ind2 == '7'
+        sfs << ['2', subject['source']]
+      end
+      df!(code, ' ', ind2).with_sfs(*sfs)
+    end
+  end
+
   def handle_dates(dates)
     return false if dates.empty?
 
@@ -203,7 +246,16 @@ class MARCModel < ASpaceExport::ExportModel
       df('245', '1', '0').with_sfs([code, val])
     end
   end
-
+  def handle_ead_loc(ead_loc)
+    df('555', ' ', ' ').with_sfs(
+                                  ['a', "Finding aid online:"],
+                                  ['u', ead_loc]
+                                )
+    df('856', '4', '2').with_sfs(
+                                  ['y', "Finding aid online"],
+                                  ['u', ead_loc]
+                                )
+  end
   def handle_notes(notes)
 
     notes.each do |note|

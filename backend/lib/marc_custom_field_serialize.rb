@@ -28,6 +28,7 @@ class MARCCustomFieldSerialize
   def datafields
     extra_fields = []
     @field_pairs = []
+    extra_fields << add_024_tag
     extra_fields << add_035_tag
     extra_fields << add_853_tag
     if @record.aspace_record['top_containers']
@@ -110,7 +111,15 @@ class MARCCustomFieldSerialize
     cf = NYUCustomTag.new(controlfield_hsh)
     cf.add_controlfield_tag
   end
-
+  def add_024_tag
+    subfields_hsh = {}
+    value = "(#{get_repo_org_code})#{check_multiple_ids}"
+    datafield_hsh = get_datafield_hash('024','7',' ')
+    subfields_hsh[1] = get_subfield_hash('a',value)
+    subfields_hsh[2] = get_subfield_hash('2','local')
+    datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
+    datafield.add_datafield_tag
+  end
   def add_035_tag
     org_code = get_repo_org_code
     value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"

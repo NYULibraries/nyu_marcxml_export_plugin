@@ -186,9 +186,25 @@ class MARCModel < ASpaceExport::ExportModel
     subjects.each do |link|
       subject = link['_resolved']
       term, *terms = subject['terms']
-      code, ind2 =  case term['term_type']
+      ind1 = ' '
+      code, *ind2 =  case term['term_type']
                     when 'uniform_title'
-                      ['630', source_to_code(subject['source'])]
+                      value = term['term'].split(" ")[0]
+                      first_indicator = '0'
+                      if value
+                        hsh = {}
+                        hsh['2'] = 'A'
+                        hsh['3'] = 'An'
+                        hsh['4'] = 'The'
+                        articles = []
+                        hsh.keys.each { |k|
+                          articles << hsh[k]
+                        }
+                        if articles.include?(value)
+                          first_indicator = hsh.key(value)
+                        end
+                      end
+                      ['630', first_indicator, source_to_code(subject['source'])]
                     when 'temporal'
                       ['648', source_to_code(subject['source'])]
                     when 'topical'
@@ -221,7 +237,14 @@ class MARCModel < ASpaceExport::ExportModel
       if ind2 == '7'
         sfs << ['2', subject['source']]
       end
-      df!(code, ' ', ind2).with_sfs(*sfs)
+      # adding this code snippet because I'm making ind2 an array
+      # for code 630 if the title begins with an article
+      if (ind2.is_a?(Array) && code == '630')
+        ind1,ind2 = ind2
+      else
+        ind2 = ind2[0]
+      end
+      df!(code, ind1, ind2).with_sfs(*sfs)
     end
   end
 

@@ -6,6 +6,10 @@ class MARCCustomFieldSerialize
 
   def leader_string
     result = @record.leader_string
+    #changing 8th position to 'a'
+    result[8] = 'a'
+    result
+
   end
 
   def controlfield_string
@@ -14,6 +18,9 @@ class MARCCustomFieldSerialize
 
   def controlfields
     cf = []
+    org_codes = %w(NNU-TL NNU-F NyNyUA)
+    org_code = get_repo_org_code
+    cf << add_003_tag(org_code) if org_codes.include?(org_code)
     cf << add_005_tag
     @record.controlfields = cf
   end
@@ -21,6 +28,7 @@ class MARCCustomFieldSerialize
   def datafields
     extra_fields = []
     @field_pairs = []
+    extra_fields << add_024_tag
     extra_fields << add_035_tag
     extra_fields << add_853_tag
     if @record.aspace_record['top_containers']
@@ -39,6 +47,7 @@ class MARCCustomFieldSerialize
     # There is a method below that does not have that assumption
     # Will call in case things change in marc record
     @sort_combined + @field_pairs
+
 
     # the method below is in case there are
     # marc tags higher than 863 in the marc record
@@ -97,6 +106,20 @@ class MARCCustomFieldSerialize
     cf.add_controlfield_tag
   end
 
+  def add_003_tag(org_code)
+    controlfield_hsh = get_controlfield_hash('003',org_code)
+    cf = NYUCustomTag.new(controlfield_hsh)
+    cf.add_controlfield_tag
+  end
+  def add_024_tag
+    subfields_hsh = {}
+    value = "(#{get_repo_org_code})#{check_multiple_ids}"
+    datafield_hsh = get_datafield_hash('024','7',' ')
+    subfields_hsh[1] = get_subfield_hash('a',value)
+    subfields_hsh[2] = get_subfield_hash('2','local')
+    datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
+    datafield.add_datafield_tag
+  end
   def add_035_tag
     org_code = get_repo_org_code
     value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
@@ -131,6 +154,7 @@ class MARCCustomFieldSerialize
   end
 
   def add_949_tag(info)
+
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('949','0','')
     # have to have a hash by position as the key
@@ -163,7 +187,7 @@ class MARCCustomFieldSerialize
     allowed_values = {}
     allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
     allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
-    allowed_values['archives'] = { b: 'BOBST', c: 'ARCH' }
+    allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
     allowed_values
   end
 
@@ -223,11 +247,20 @@ class MARCCustomFieldSerialize
     get_subfield_hash('j',id)
   end
 
+  def location_hsh
+    {
+      "Clancy Cullen" => "DM",
+      "20 Cooper Square" => "OK",
+      "Bobst" => "OP"
+    }
+  end
+
   def get_location(location_info)
-    # if location is Clancy Cullen,
-    # output VH
+    loc_hsh = location_hsh
+    # if location is one of the keys in location_hash,
+    # output the value
     # else a blank subfield
-    location = location_info == 'Clancy Cullen' ? 'VH' : ''
+    location = loc_hsh.key?(location_info) ? loc_hsh[location_info] : ''
     # creating a subfield hash
     get_subfield_hash('s',location)
   end

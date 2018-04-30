@@ -182,6 +182,11 @@ class MARCModel < ASpaceExport::ExportModel
 
   end
 
+  def handle_title(title)
+    title += ","
+    df('245', '1', '0').with_sfs(['a', title])
+  end
+
   def handle_subjects(subjects)
     subjects.each do |link|
       subject = link['_resolved']
@@ -254,7 +259,13 @@ class MARCModel < ASpaceExport::ExportModel
     dates = [["single", "inclusive", "range"], ["bulk"]].map {|types|
       dates.find {|date| types.include? date['date_type'] }
     }.compact
-
+    chk_array = []
+    dates.each { |d|
+      d.keys.each { |k|
+        chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
+      }
+    }
+    chk_array.flatten!
     dates.each do |date|
       code = date['date_type'] == 'bulk' ? 'g' : 'f'
       val = nil
@@ -262,10 +273,12 @@ class MARCModel < ASpaceExport::ExportModel
         val = date['expression']
       elsif date['date_type'] == 'single'
         val = date['begin']
+      elsif date['begin'] == date['end']
+        val = "(bulk #{date['begin']})."
       else
         val = "#{date['begin']}-#{date['end']}"
       end
-
+      val += "." if code == 'f' && not(chk_array.include?("bulk"))
       df('245', '1', '0').with_sfs([code, val])
     end
   end

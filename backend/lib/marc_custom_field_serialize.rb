@@ -154,6 +154,7 @@ class MARCCustomFieldSerialize
   end
 
   def add_949_tag(info)
+
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('949','0','')
     # have to have a hash by position as the key
@@ -249,15 +250,15 @@ class MARCCustomFieldSerialize
   def location_hsh
     {
       "Clancy Cullen" => "DM",
-      "20 Cooper Square [Offsite Prep]" => "OK",
-      "Bobst [Offsite Prep]" => "OP"
+      "20 Cooper Square" => "OK",
+      "Bobst" => "OP"
     }
   end
 
   def get_location(location_info)
     loc_hsh = location_hsh
-    # if location is Clancy Cullen,
-    # output VH
+    # if location is one of the keys in location_hash,
+    # output the value
     # else a blank subfield
     location = loc_hsh.key?(location_info) ? loc_hsh[location_info] : ''
     # creating a subfield hash

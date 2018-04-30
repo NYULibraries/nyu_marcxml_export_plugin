@@ -198,16 +198,12 @@ class MARCModel < ASpaceExport::ExportModel
                       first_indicator = '0'
                       if value
                         hsh = {}
-                        hsh['2'] = 'A'
-                        hsh['3'] = 'An'
-                        hsh['4'] = 'The'
+                        hsh['A'] = '2'
+                        hsh['An'] = '3'
+                        hsh['The'] = '4'
                         articles = []
-                        hsh.keys.each { |k|
-                          articles << hsh[k]
-                        }
-                        if articles.include?(value)
-                          first_indicator = hsh.key(value)
-                        end
+                        articles = hsh.keys
+                        first_indicator = hsh[value] if articles.include?(value)
                       end
                       ['630', first_indicator, source_to_code(subject['source'])]
                     when 'temporal'
@@ -276,7 +272,7 @@ class MARCModel < ASpaceExport::ExportModel
       elsif date['begin'] == date['end']
         val = "(bulk #{date['begin']})."
       else
-        val = "#{date['begin']}-#{date['end']}"
+        val = "bulk(#{date['begin']}-#{date['end']})."
       end
       val += "." if code == 'f' && not(chk_array.include?("bulk"))
       df('245', '1', '0').with_sfs([code, val])

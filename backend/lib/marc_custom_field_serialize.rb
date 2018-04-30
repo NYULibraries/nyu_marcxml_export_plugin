@@ -186,7 +186,7 @@ class MARCCustomFieldSerialize
     allowed_values = {}
     allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
     allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
-    allowed_values['archives'] = { b: 'BOBST', c: 'ARCH' }
+    allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
     allowed_values
   end
 
@@ -246,11 +246,20 @@ class MARCCustomFieldSerialize
     get_subfield_hash('j',id)
   end
 
+  def location_hsh
+    {
+      "Clancy Cullen" => "DM",
+      "20 Cooper Square [Offsite Prep]" => "OK",
+      "Bobst [Offsite Prep]" => "OP"
+    }
+  end
+
   def get_location(location_info)
+    loc_hsh = location_hsh
     # if location is Clancy Cullen,
     # output VH
     # else a blank subfield
-    location = location_info == 'Clancy Cullen' ? 'VH' : ''
+    location = loc_hsh.key?(location_info) ? loc_hsh[location_info] : ''
     # creating a subfield hash
     get_subfield_hash('s',location)
   end

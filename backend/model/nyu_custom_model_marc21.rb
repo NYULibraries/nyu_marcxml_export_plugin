@@ -272,7 +272,11 @@ class MARCModel < ASpaceExport::ExportModel
       elsif date['begin'] == date['end']
         val = "(bulk #{date['begin']})."
       else
-        val = "bulk(#{date['begin']}-#{date['end']})."
+        if code == 'f'
+          val = "#{date['begin']}-#{date['end']}"
+        elsif code == 'g'
+          val = "bulk(#{date['begin']}-#{date['end']})."
+        end
       end
       val += "." if code == 'f' && not(chk_array.include?("bulk"))
       df('245', '1', '0').with_sfs([code, val])

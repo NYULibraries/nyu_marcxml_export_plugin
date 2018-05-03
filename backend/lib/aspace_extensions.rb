@@ -31,6 +31,7 @@ module ExportHelpers
     top_container_results = find_top_containers
     tc_info = {}
     top_containers = top_container_results['response']['docs']
+
     top_containers.each { |tc|
       data = JSON.parse(tc['json'])
       id = data['uri'] # top container uri
@@ -41,8 +42,20 @@ module ExportHelpers
         hash = hash.merge(barcode)
       end
       tc_info[id] = hash
-      location = data['container_locations'][0]
-      tc_info[id].merge!({location: location['_resolved']['building']}) if location
+      binding.remote_pry if id == "/repositories/3/top_containers/74100"
+      location = tc["location_display_string_u_sstr"][0]
+      # The other way to get the location is through the location model
+      # location = data['container_locations'][0]
+      # location['_resolved']['title']
+      # attached to tc
+      # tc["location_display_string_u_sstr"]
+      # Unsure about which is more stable:
+      # whether to traverse the location model
+      # or the solr schema
+      # possibly the solr schema since it is also attached
+      # to the PUI
+      tc_info[id].merge!({location: location}) if location
+
     }
     tc_info
   end

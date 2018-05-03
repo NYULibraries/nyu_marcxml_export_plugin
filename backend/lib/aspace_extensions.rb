@@ -42,18 +42,16 @@ module ExportHelpers
         hash = hash.merge(barcode)
       end
       tc_info[id] = hash
-      location = tc["location_display_string_u_sstr"][0]
-      # The other way to get the location is through the location model
-      # location = data['container_locations'][0]
-      # location['_resolved']['title']
+      location = data['container_locations'][0]
+      # The other way to get the location is through the solr record
+      # tc["location_display_string_u_sstr"][0]
       # attached to tc
-      # tc["location_display_string_u_sstr"]
       # Unsure about which is more stable:
       # whether to traverse the location model
       # or the solr schema
-      # possibly the solr schema since it is also attached
-      # to the PUI
-      tc_info[id].merge!({location: location}) if location
+      # Tried the solr schema but got an error for a Nil class which I didn't
+      # when using the location model
+      tc_info[id].merge!({location: location['_resolved']['title']}) if location
 
     }
     tc_info

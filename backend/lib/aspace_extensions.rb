@@ -42,7 +42,6 @@ module ExportHelpers
         hash = hash.merge(barcode)
       end
       tc_info[id] = hash
-      binding.remote_pry if id == "/repositories/3/top_containers/74100"
       location = tc["location_display_string_u_sstr"][0]
       # The other way to get the location is through the location model
       # location = data['container_locations'][0]

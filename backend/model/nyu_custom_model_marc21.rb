@@ -275,7 +275,7 @@ class MARCModel < ASpaceExport::ExportModel
         if code == 'f'
           val = "#{date['begin']}-#{date['end']}"
         elsif code == 'g'
-          val = "bulk(#{date['begin']}-#{date['end']})."
+          val = "(bulk #{date['begin']}-#{date['end']})."
         end
       end
       val += "." if code == 'f' && not(chk_array.include?("bulk"))

@@ -249,7 +249,7 @@ class MARCCustomFieldSerialize
 
   def location_hsh
     {
-      "Clancy Cullen" => "DM",
+      "Clancy Cullen [Offsite]" => "DM",
       "20 Cooper Square [Offsite Prep]" => "OK",
       "Bobst [Offsite Prep]" => "OP"
     }

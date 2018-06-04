@@ -42,7 +42,13 @@ module ExportHelpers
         hash = hash.merge(barcode)
       end
       tc_info[id] = hash
-      location = tc["location_display_string_u_sstr"][0]
+      
+      # Checking for nil location
+      if tc["location_display_string_u_sstr"] then
+        location = tc["location_display_string_u_sstr"][0]
+        tc_info[id].merge!({location: location})
+      end
+      #location = tc["location_display_string_u_sstr"][0]
       # The other way to get the location is through the location model
       # location = data['container_locations'][0]
       # location['_resolved']['title']
@@ -53,7 +59,7 @@ module ExportHelpers
       # or the solr schema
       # possibly the solr schema since it is also attached
       # to the PUI
-      tc_info[id].merge!({location: location}) if location
+      #tc_info[id].merge!({location: location}) if location
 
     }
     tc_info

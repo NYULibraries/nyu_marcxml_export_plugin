@@ -30,13 +30,19 @@ class MARCCustomFieldSerialize
     @field_pairs = []
     extra_fields << add_024_tag
     extra_fields << add_035_tag
-    extra_fields << add_853_tag
+    begin
+      extra_fields << add_853_tag
+    rescue
+    end
     if @record.aspace_record['top_containers']
       top_containers = @record.aspace_record['top_containers']
       top_containers.each_key{ |id|
         info = top_containers[id]
-        @field_pairs << add_863_tag(info)
-        @field_pairs << add_949_tag(info)
+        begin
+          @field_pairs << add_863_tag(info)
+          @field_pairs << add_949_tag(info)
+        rescue
+        end
       }
     end
     @sort_combined = (@record.datafields + extra_fields).sort_by(&:tag)

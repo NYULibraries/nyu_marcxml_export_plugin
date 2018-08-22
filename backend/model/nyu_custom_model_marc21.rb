@@ -34,7 +34,6 @@ class MARCModel < ASpaceExport::ExportModel
 
   def handle_language(langcode)
     df('041', '0', ' ').with_sfs(['a', langcode])
-    df('049', '0', ' ').with_sfs(['a', langcode])
   end
 
   def handle_repo_code(repository,langcode)

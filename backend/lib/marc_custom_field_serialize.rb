@@ -18,7 +18,7 @@ class MARCCustomFieldSerialize
 
   def controlfields
     cf = []
-    org_codes = %w(NNU-TL NNU-F NyNyUA)
+    org_codes = %w(NNU-TL NNU-F NyNyUA NyNyUAD NyNyUCH NBPol NyBlHS NHi)
     org_code = get_repo_org_code
     cf << add_003_tag(org_code) if org_codes.include?(org_code)
     cf << add_005_tag

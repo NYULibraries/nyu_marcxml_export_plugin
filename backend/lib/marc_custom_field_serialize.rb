@@ -45,7 +45,6 @@ class MARCCustomFieldSerialize
           @field_pairs << add_949_tag(info)
         }
       end
-      
     end
 
     @sort_combined = (@record.datafields + extra_fields).sort_by(&:tag)

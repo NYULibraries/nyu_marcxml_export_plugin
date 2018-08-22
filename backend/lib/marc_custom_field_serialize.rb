@@ -26,19 +26,28 @@ class MARCCustomFieldSerialize
   end
 
   def datafields
+    
     extra_fields = []
     @field_pairs = []
+
+    # Do this on all records
     extra_fields << add_024_tag
     extra_fields << add_035_tag
-    extra_fields << add_853_tag
-    if @record.aspace_record['top_containers']
-      top_containers = @record.aspace_record['top_containers']
-      top_containers.each_key{ |id|
-        info = top_containers[id]
-        @field_pairs << add_863_tag(info)
-        @field_pairs << add_949_tag(info)
-      }
+  
+    # Only process the 853, 863 and 949 if the records is from tamwag, fales or nyuarchives
+    if(get_allowed_values.contains_key?(get_record_repo_value)) then
+      extra_fields << add_853_tag
+      if @record.aspace_record['top_containers']
+        top_containers = @record.aspace_record['top_containers']
+        top_containers.each_key{ |id|
+          info = top_containers[id]
+          @field_pairs << add_863_tag(info)
+          @field_pairs << add_949_tag(info)
+        }
+      end
+      
     end
+
     @sort_combined = (@record.datafields + extra_fields).sort_by(&:tag)
     # 863 and 949 pairs are not to be sorted
     # sticking them at the end since the highest tag

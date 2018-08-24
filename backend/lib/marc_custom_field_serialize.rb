@@ -41,8 +41,10 @@ class MARCCustomFieldSerialize
         top_containers = @record.aspace_record['top_containers']
         top_containers.each_key{ |id|
           info = top_containers[id]
-          @field_pairs << add_863_tag(info)
-          @field_pairs << add_949_tag(info)
+          if(info[:barcode].empty? == false) then
+            @field_pairs << add_863_tag(info)
+            @field_pairs << add_949_tag(info)
+          end
         }
       end
     end

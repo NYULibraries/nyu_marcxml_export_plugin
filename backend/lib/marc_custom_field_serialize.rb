@@ -35,7 +35,7 @@ class MARCCustomFieldSerialize
     extra_fields << add_035_tag
   
     # Only process the 853, 863 and 949 if the records is from tamwag, fales or nyuarchives
-    if(get_allowed_values.contains_key?(get_record_repo_value)) then
+    if(get_allowed_values.has_key?(get_record_repo_value)) then
       extra_fields << add_853_tag
       if @record.aspace_record['top_containers']
         top_containers = @record.aspace_record['top_containers']

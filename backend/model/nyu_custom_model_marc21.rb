@@ -113,8 +113,11 @@ class MARCModel < ASpaceExport::ExportModel
         #sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
       #end
 
+      sfs << ['2', subject['display_name']['source']] 
+
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
+
 
 
     creators = linked_agents.select{|a| a['role'] == 'creator'}[1..-1] || []

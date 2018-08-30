@@ -108,10 +108,10 @@ class MARCModel < ASpaceExport::ExportModel
         sfs << [(tag), t['term']]
       end
 
-      if ind2 == '7'
-        create_sfs2 = %w(local ingest)
-        sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
-      end
+      #if ind2 == '7'
+        #create_sfs2 = %w(local ingest)
+        #sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
+      #end
 
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end

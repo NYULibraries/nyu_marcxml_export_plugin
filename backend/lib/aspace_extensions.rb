@@ -5,12 +5,12 @@ module ExportHelpers
 
   def generate_marc(id)
     @obj = resolve_references(Resource.to_jsonmodel(id),
-    ['repository', 'linked_agents', 'subjects', 'instances',
-      'tree'])
-      tc_hash = process_top_containers
-      @obj['top_containers'] = tc_hash unless tc_hash.nil?
-      marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(@obj))
-      ASpaceExport::serialize(marc)
+                              ['repository', 'linked_agents', 'subjects', 'instances',
+                               'tree'])
+    tc_hash = process_top_containers
+    @obj['top_containers'] = tc_hash unless tc_hash.nil?
+    marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(@obj))
+    ASpaceExport::serialize(marc)
   end
 
   def find_top_containers
@@ -64,19 +64,19 @@ module ExportHelpers
     }
     tc_info
   end
-
 end
 
 class MARCModel < ASpaceExport::ExportModel
   attr_reader :aspace_record, :top_containers
   attr_accessor :controlfields
-  def initialize(obj)
+  def initialize(obj, opts = {include_unpublished: false})
     @datafields = {}
     @controlfields = {}
+    @include_unpublished = opts[:include_unpublished]
     @aspace_record = obj
   end
 
-  def self.from_aspace_object(obj)
-    self.new(obj)
+  def self.from_aspace_object(obj, opts = {})
+    self.new(obj, opts)
   end
 end

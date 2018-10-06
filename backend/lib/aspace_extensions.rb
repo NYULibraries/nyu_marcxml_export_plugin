@@ -3,13 +3,19 @@ module ExportHelpers
 
   ASpaceExport::init
 
-  def generate_marc(id)
-    @obj = resolve_references(Resource.to_jsonmodel(id),
-                              ['repository', 'linked_agents', 'subjects', 'instances',
-                               'tree'])
+  def generate_marc(id, include_unpublished = false)
+    opts = {:include_unpublished => include_unpublished}
+
+    references = ['repository', 'linked_agents', 'subjects', 'instances', 'tree']
+    @obj = resolve_references(Resource.to_jsonmodel(id), references)
+
     tc_hash = process_top_containers
     @obj['top_containers'] = tc_hash unless tc_hash.nil?
-    marc = ASpaceExport.model(:marc21).from_resource(JSONModel(:resource).new(@obj))
+
+    resource = JSONModel(:resource).new(@obj)
+    JSONModel::set_publish_flags!(resource)
+    marc = ASpaceExport.model(:marc21).from_resource(resource, opts)
+
     ASpaceExport::serialize(marc)
   end
 
@@ -74,6 +80,10 @@ class MARCModel < ASpaceExport::ExportModel
     @controlfields = {}
     @include_unpublished = opts[:include_unpublished]
     @aspace_record = obj
+  end
+
+  def include_unpublished?
+    @include_unpublished
   end
 
   def self.from_aspace_object(obj, opts = {})

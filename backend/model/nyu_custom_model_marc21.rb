@@ -234,16 +234,19 @@ class MARCModel < ASpaceExport::ExportModel
         sfs << [tag, t['term']]
       end
 
-      if ind2 == '7'
+      # N.B. ind2 is an array at this point.
+      if ind2[0] == '7'
         sfs << ['2', subject['source']]
       end
+
       # adding this code snippet because I'm making ind2 an array
       # for code 630 if the title begins with an article
       if (ind2.is_a?(Array) && code == '630')
-        ind1,ind2 = ind2
+        ind1, ind2 = ind2
       else
         ind2 = ind2[0]
       end
+
       df!(code, ind1, ind2).with_sfs(*sfs)
     end
   end

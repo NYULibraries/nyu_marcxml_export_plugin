@@ -261,7 +261,7 @@ class MARCCustomFieldSerialize
     {
       "Clancy Cullen [Offsite]" => "DM",
       "20 Cooper Square [Offsite Prep]" => "OK",
-      "Bobst [Offsite Prep]" => "OP"
+      "Bobst [Offsite Prep]" => "ON"
     }
   end
 

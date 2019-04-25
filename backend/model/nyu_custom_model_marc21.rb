@@ -116,7 +116,7 @@ class MARCModel < ASpaceExport::ExportModel
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
 
-
+=begin
     creators = linked_agents.select{|a| a['role'] == 'creator'}[1..-1] || []
     creators = creators + linked_agents.select{|a| a['role'] == 'source'}
 
@@ -136,6 +136,7 @@ class MARCModel < ASpaceExport::ExportModel
       end
 
       ind2 = ' '
+     
 
       case creator['agent_type']
 
@@ -178,7 +179,7 @@ class MARCModel < ASpaceExport::ExportModel
       sfs << relator_sf
       df(code, ind1, ind2).with_sfs(*sfs)
     end
-
+=end
   end
 
   def handle_title(title)

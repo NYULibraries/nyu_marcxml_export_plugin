@@ -48,6 +48,7 @@ class MARCModel < ASpaceExport::ExportModel
   def handle_agents(linked_agents)
 
     handle_primary_creator(linked_agents)
+    handle_other_creators(linked_agents)
 
     subjects = linked_agents.select{|a| a['role'] == 'subject'}
 

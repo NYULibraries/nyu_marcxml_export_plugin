@@ -116,19 +116,21 @@ class MARCModel < ASpaceExport::ExportModel
 
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
+  end
 
-
+  def handle_other_creators(linked_agents)
     creators = linked_agents.select{|a| a['role'] == 'creator'}[1..-1] || []
     creators = creators + linked_agents.select{|a| a['role'] == 'source'}
 
-    creators.each do |link|
+    creators.each_with_index do |link, i|
+      next unless link["_resolved"]["publish"] || @include_unpublished
+
       creator = link['_resolved']
       name = creator['display_name']
-      relator = link['relator']
       terms = link['terms']
       role = link['role']
 
-      if relator
+      if link['relator']
         relator_sf = ['4', link['relator']]
       elsif role == 'source'
         relator_sf =  ['e', 'former owner']
@@ -137,50 +139,28 @@ class MARCModel < ASpaceExport::ExportModel
       end
 
       ind2 = ' '
-     
 
       case creator['agent_type']
 
       when 'agent_corporate_entity'
         code = '710'
         ind1 = '2'
-        sfs = [
-          ['a', name['primary_name']],
-          ['b', name['subordinate_name_1']],
-          ['b', name['subordinate_name_2']],
-          ['n', name['number']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_corporate_subfield_mappings(name, relator_sf, creator)
 
       when 'agent_person'
-        joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
-        name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
-        ind1 = name['name_order'] == 'direct' ? '0' : '1'
+        ind1  = name['name_order'] == 'direct' ? '0' : '1'
         code = '700'
-        sfs = [
-          ['a', name_parts],
-          ['b', name['number']],
-          ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
-          ['q', name['fuller_form']],
-          ['d', name['dates']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_person_subfield_mappings(name, relator_sf, creator)
 
       when 'agent_family'
         ind1 = '3'
         code = '700'
-        sfs = [
-          ['a', name['family_name']],
-          ['c', name['prefix']],
-          ['d', name['dates']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_family_subfield_mappings(name, relator_sf, creator)
+
       end
 
-      sfs << relator_sf
-      df(code, ind1, ind2).with_sfs(*sfs)
+      df(code, ind1, ind2, i).with_sfs(*sfs)
     end
-
   end
 
   def handle_title(title)

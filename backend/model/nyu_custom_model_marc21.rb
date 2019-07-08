@@ -48,6 +48,7 @@ class MARCModel < ASpaceExport::ExportModel
   def handle_agents(linked_agents)
 
     handle_primary_creator(linked_agents)
+    handle_other_creators(linked_agents)
 
     subjects = linked_agents.select{|a| a['role'] == 'subject'}
 
@@ -116,7 +117,7 @@ class MARCModel < ASpaceExport::ExportModel
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
 
-=begin
+
     creators = linked_agents.select{|a| a['role'] == 'creator'}[1..-1] || []
     creators = creators + linked_agents.select{|a| a['role'] == 'source'}
 
@@ -128,7 +129,7 @@ class MARCModel < ASpaceExport::ExportModel
       role = link['role']
 
       if relator
-        relator_sf = ['4', relator]
+        relator_sf = ['4', link['relator']]
       elsif role == 'source'
         relator_sf =  ['e', 'former owner']
       else
@@ -179,7 +180,7 @@ class MARCModel < ASpaceExport::ExportModel
       sfs << relator_sf
       df(code, ind1, ind2).with_sfs(*sfs)
     end
-=end
+
   end
 
   def handle_title(title)

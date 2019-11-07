@@ -9,7 +9,6 @@ class MARCCustomFieldSerialize
     #changing 8th position to 'a'
     result[8] = 'a'
     result
-
   end
 
   def controlfield_string

@@ -26,14 +26,14 @@ class MARCCustomFieldSerialize
   end
 
   def datafields
-    
+
     extra_fields = []
     @field_pairs = []
 
     # Do this on all records
     extra_fields << add_024_tag
     extra_fields << add_035_tag
-  
+
     # Only process the 853, 863 and 949 if the records is from tamwag, fales or nyuarchives
     if(get_allowed_values.has_key?(get_record_repo_value)) then
       extra_fields << add_853_tag
@@ -239,7 +239,7 @@ class MARCCustomFieldSerialize
     j_id = @record.aspace_record['id_0']
     j_other_ids = []
     if @record.aspace_record['id_1'] or @record.aspace_record['id_2'] or
-      @record.aspace_record['id_3']
+        @record.aspace_record['id_3']
       j_other_ids << @record.aspace_record['id_1']
       j_other_ids << @record.aspace_record['id_2']
       j_other_ids << @record.aspace_record['id_3']
@@ -259,9 +259,9 @@ class MARCCustomFieldSerialize
 
   def location_hsh
     {
-      "Clancy Cullen [Offsite]" => "DM",
-      "20 Cooper Square [Offsite Prep]" => "OK",
-      "Bobst [Offsite Prep]" => "ON"
+        "Clancy Cullen [Offsite]" => "DM",
+        "20 Cooper Square [Offsite Prep]" => "OK",
+        "Bobst [Offsite Prep]" => "ON"
     }
   end
 

@@ -48,7 +48,7 @@ module ExportHelpers
         hash = hash.merge(barcode)
       end
       tc_info[id] = hash
-      
+
       # Checking for nil location
       if tc["location_display_string_u_sstr"] then
         location = tc["location_display_string_u_sstr"][0]

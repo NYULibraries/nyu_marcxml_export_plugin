@@ -494,7 +494,15 @@ class MARCModel < ASpaceExport::ExportModel
       when 'agent_corporate_entity'
         code = '610'
         ind1 = '2'
-        sfs = gather_agent_corporate_subfield_mappings(name, relator_sf, subject)
+        code = '610'
+        ind1 = '2'
+        sfs = [
+            ['a', name['primary_name']],
+            ['b', name['subordinate_name_1']],
+            ['b', name['subordinate_name_2']],
+            ['n', name['number']],
+            ['g', name['qualifier']],
+        ]
 
 
       when 'agent_person'

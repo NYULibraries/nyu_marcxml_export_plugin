@@ -494,7 +494,8 @@ class MARCModel < ASpaceExport::ExportModel
       when 'agent_corporate_entity'
         code = '610'
         ind1 = '2'
-        sfs = gather_agent_corporate_subfield_mappings(name, relator_sf, subject)
+        sf = gather_agent_corporate_subfield_mappings(name, relator_sf, subject)
+        sfs = sf[0, sf.length - 1]
 
       when 'agent_person'
         ind1  = name['name_order'] == 'direct' ? '0' : '1'

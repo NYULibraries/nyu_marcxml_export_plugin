@@ -189,7 +189,7 @@ class MARCModel < ASpaceExport::ExportModel
         if date['expression']
           val = date['expression']
         elsif date['end']
-          val = "#{date['begin']} - #{date['end']}"
+          val = "#{date['begin']}-#{date['end']}."
         else
           val = "#{date['begin']}"
         end

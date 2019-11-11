@@ -322,35 +322,36 @@ class MARCModel < ASpaceExport::ExportModel
       subject = link['_resolved']
       term, *terms = subject['terms']
       ind1 = ' '
-      code, ind2 =  case term['term_type']
-                    when 'uniform_title'
-                      value = term['term'].split(" ")[0]
-                      first_indicator = '0'
-                      if value
-                        hsh = {}
-                        hsh['A'] = '2'
-                        hsh['An'] = '3'
-                        hsh['The'] = '4'
-                        articles = []
-                        articles = hsh.keys
-                        first_indicator = hsh[value] if articles.include?(value)
-                      end
-                      ['630', source_to_code(subject['source'])]
-                    when 'temporal'
-                      ['648', source_to_code(subject['source'])]
-                    when 'topical'
-                      ['650', source_to_code(subject['source'])]
-                    when 'geographic', 'cultural_context'
-                      ['651', source_to_code(subject['source'])]
-                    when 'genre_form', 'style_period'
-                      ['655', source_to_code(subject['source'])]
-                    when 'occupation'
-                      ['656', '7']
-                    when 'function'
-                      ['656', '7']
-                    else
-                      ['650', source_to_code(subject['source'])]
-                    end
+      code, *ind2 =  case term['term_type']
+                     when 'uniform_title'
+                       value = term['term'].split(" ")[0]
+                       first_indicator = '0'
+                       if value
+                         hsh = {}
+                         hsh['A'] = '2'
+                         hsh['An'] = '3'
+                         hsh['The'] = '4'
+                         articles = []
+                         articles = hsh.keys
+                         first_indicator = hsh[value] if articles.include?(value)
+                       end
+                       ['630', first_indicator, source_to_code(subject['source'])]
+                     when 'temporal'
+                       ['648', source_to_code(subject['source'])]
+                     when 'topical'
+                       ['650', source_to_code(subject['source'])]
+                     when 'geographic', 'cultural_context'
+                       ['651', source_to_code(subject['source'])]
+                     when 'genre_form', 'style_period'
+                       ['655', source_to_code(subject['source'])]
+                     when 'occupation'
+                       ['656', '7']
+                     when 'function'
+                       ['656', '7']
+                     else
+                       ['650', source_to_code(subject['source'])]
+                     end
+
       sfs = [['a', term['term']]]
 
       terms.each do |t|
@@ -364,16 +365,22 @@ class MARCModel < ASpaceExport::ExportModel
         sfs << [tag, t['term']]
       end
 
-      if ind2 == '7'
+      # N.B. ind2 is an array at this point.
+      if ind2[0] == '7'
         sfs << ['2', subject['source']]
       end
 
-      ind1 = code == '630' ? "0" : " "
+      # adding this code snippet because I'm making ind2 an array
+      # for code 630 if the title begins with an article
+      if (ind2.is_a?(Array) && code == '630')
+        ind1, ind2 = ind2
+      else
+        ind2 = ind2[0]
+      end
+
       df!(code, ind1, ind2).with_sfs(*sfs)
     end
   end
-
-
 
   def handle_primary_creator(linked_agents)
     link = linked_agents.find{|a| a['role'] == 'creator'}

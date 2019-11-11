@@ -216,7 +216,7 @@ class MARCModel < ASpaceExport::ExportModel
 
     languages.each do |language|
 
-      df('041', ' ', ' ').with_sfs(['a', language['language']])
+      df('041', '0', ' ').with_sfs(['a', language['language']])
 
     end
 
@@ -239,7 +239,13 @@ class MARCModel < ASpaceExport::ExportModel
     dates = [["single", "inclusive", "range"], ["bulk"]].map {|types|
       dates.find {|date| types.include? date['date_type'] }
     }.compact
-
+    chk_array = []
+    dates.each { |d|
+      d.keys.each { |k|
+        chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
+      }
+    }
+    chk_array.flatten!
     dates.each do |date|
       code = date['date_type'] == 'bulk' ? 'g' : 'f'
       val = nil
@@ -247,10 +253,16 @@ class MARCModel < ASpaceExport::ExportModel
         val = date['expression']
       elsif date['date_type'] == 'single'
         val = date['begin']
+      elsif date['begin'] == date['end']
+        val = "(bulk #{date['begin']})."
       else
-        val = "#{date['begin']} - #{date['end']}"
+        if code == 'f'
+          val = "#{date['begin']}-#{date['end']}"
+        elsif code == 'g'
+          val = "(bulk #{date['begin']}-#{date['end']})."
+        end
       end
-
+      val += "." if code == 'f' && not(chk_array.include?("bulk"))
       df('245', '1', '0').with_sfs([code, val])
     end
   end
@@ -527,7 +539,7 @@ class MARCModel < ASpaceExport::ExportModel
       marc_args = case note['type']
 
                   when 'arrangement', 'fileplan'
-                    ['351', 'a']
+                    ['351', 'b']
                   when 'odd', 'dimensions', 'physdesc', 'materialspec', 'physloc', 'phystech', 'physfacet', 'processinfo', 'separatedmaterial'
                     ['500','a']
                   when 'accessrestrict'
@@ -537,7 +549,7 @@ class MARCModel < ASpaceExport::ExportModel
                   when 'abstract'
                     ['520', '3', ' ', 'a']
                   when 'prefercite'
-                    ['524', ' ', ' ', 'a']
+                    ['524', '8', ' ', 'a']
                   when 'acqinfo'
                     ind1 = note['publish'] ? '1' : '0'
                     ['541', ind1, ' ', 'a']
@@ -597,17 +609,14 @@ class MARCModel < ASpaceExport::ExportModel
 
   # 3/28/18: Updated: ANW-318
   def handle_ead_loc(ead_loc)
-    # If there is EADlocation
-    #<datafield tag="856" ind1="4" ind2="2">
-    #  <subfield code="z">Finding aid online:</subfield>
-    #  <subfield code="u">EADlocation</subfield>
-    #</datafield>
-    if ead_loc && !ead_loc.empty?
-      df('856', '4', '2').with_sfs(
-          ['z', "Finding aid online:"],
-          ['u', ead_loc]
-      )
-    end
+    df('555', ' ', ' ').with_sfs(
+        ['a', "Finding aid online:"],
+        ['u', ead_loc]
+    )
+    df('856', '4', '2').with_sfs(
+        ['y', "Finding aid online"],
+        ['u', ead_loc]
+    )
   end
 
   def handle_ark(id, type='resource')

@@ -166,6 +166,9 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
+  def source_to_code(source)
+    ASpaceMappings::MARC21.get_marc_source_code(source)
+  end
 
   def handle_id(*ids)
     ids.reject!{|i| i.nil? || i.empty?}
@@ -267,6 +270,7 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
+
   def handle_repo_code(repository, *finding_aid_language)
     repo = repository['_resolved']
     return false unless repo
@@ -310,10 +314,6 @@ class MARCModel < ASpaceExport::ExportModel
         df('044', ' ', ' ').with_sfs(['a', repo['country'].downcase])
       end
     end
-  end
-
-  def source_to_code(source)
-    ASpaceMappings::MARC21.get_marc_source_code(source)
   end
 
 
@@ -381,6 +381,81 @@ class MARCModel < ASpaceExport::ExportModel
       df!(code, ind1, ind2).with_sfs(*sfs)
     end
   end
+
+
+  def handle_agents(linked_agents)
+
+    handle_primary_creator(linked_agents)
+    handle_other_creators(linked_agents)
+
+    subjects = linked_agents.select{|a| a['role'] == 'subject'}
+
+    subjects.each_with_index do |link, i|
+      subject = link['_resolved']
+      name = subject['display_name']
+      relator = link['relator']
+      terms = link['terms']
+      ind2 = source_to_code(name['source'])
+
+      case subject['agent_type']
+
+      when 'agent_corporate_entity'
+        code = '610'
+        ind1 = '2'
+        sfs = [
+            ['a', name['primary_name']],
+            ['b', name['subordinate_name_1']],
+            ['b', name['subordinate_name_2']],
+            ['n', name['number']],
+            ['g', name['qualifier']],
+        ]
+
+      when 'agent_person'
+        joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
+        name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
+        ind1 = name['name_order'] == 'direct' ? '0' : '1'
+        code = '600'
+        sfs = [
+            ['a', name_parts],
+            ['b', name['number']],
+            ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
+            ['q', name['fuller_form']],
+            ['d', name['dates']],
+            ['g', name['qualifier']],
+        ]
+
+      when 'agent_family'
+        code = '600'
+        ind1 = '3'
+        sfs = [
+            ['a', name['family_name']],
+            ['c', name['prefix']],
+            ['d', name['dates']],
+            ['g', name['qualifier']],
+        ]
+
+      end
+
+      terms.each do |t|
+        tag = case t['term_type']
+              when 'uniform_title'; 't'
+              when 'genre_form', 'style_period'; 'v'
+              when 'topical', 'cultural_context'; 'x'
+              when 'temporal'; 'y'
+              when 'geographic'; 'z'
+              end
+        sfs << [(tag), t['term']]
+      end
+
+      if ind2 == '7'
+        create_sfs2 = %w(local ingest)
+        sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
+      end
+
+      df(code, ind1, ind2, i).with_sfs(*sfs)
+    end
+  end
+
 
   def handle_primary_creator(linked_agents)
     link = linked_agents.find{|a| a['role'] == 'creator'}
@@ -467,74 +542,6 @@ class MARCModel < ASpaceExport::ExportModel
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
   end
-
-
-  def handle_agents(linked_agents)
-
-    handle_primary_creator(linked_agents)
-    handle_other_creators(linked_agents)
-
-    subjects = linked_agents.select{|a| a['role'] == 'subject'}
-
-    subjects.each_with_index do |link, i|
-      next unless link["_resolved"]["publish"] || @include_unpublished
-
-      subject = link['_resolved']
-      name = subject['display_name']
-      terms = link['terms']
-      ind2 = source_to_code(name['source'])
-
-      if link['relator']
-        relator = I18n.t("enumerations.linked_agent_archival_record_relators.#{link['relator']}")
-        relator_sf = ['4', relator]
-      end
-
-      case subject['agent_type']
-
-      when 'agent_corporate_entity'
-        code = '610'
-        ind1 = '2'
-        code = '610'
-        ind1 = '2'
-        sfs = [
-            ['a', name['primary_name']],
-            ['b', name['subordinate_name_1']],
-            ['b', name['subordinate_name_2']],
-            ['n', name['number']],
-            ['g', name['qualifier']],
-        ]
-
-
-      when 'agent_person'
-        ind1  = name['name_order'] == 'direct' ? '0' : '1'
-        code = '600'
-        sfs = gather_agent_person_subfield_mappings(name, relator_sf, subject)
-
-      when 'agent_family'
-        code = '600'
-        ind1 = '3'
-        sfs = gather_agent_family_subfield_mappings(name, relator_sf, subject)
-      end
-
-      terms.each do |t|
-        tag = case t['term_type']
-              when 'uniform_title'; 't'
-              when 'genre_form', 'style_period'; 'v'
-              when 'topical', 'cultural_context'; 'x'
-              when 'temporal'; 'y'
-              when 'geographic'; 'z'
-              end
-        sfs << [(tag), t['term']]
-      end
-
-      if ind2 == '7'
-        sfs << ['2', subject['names'].first['source']]
-      end
-
-      df(code, ind1, ind2, i).with_sfs(*sfs)
-    end
-  end
-
 
   def handle_notes(notes)
 
@@ -634,6 +641,7 @@ class MARCModel < ASpaceExport::ExportModel
         ['u', ead_loc]
     )
   end
+
 
   def handle_ark(id, type='resource')
     # If ARKs are enabled, add an 856

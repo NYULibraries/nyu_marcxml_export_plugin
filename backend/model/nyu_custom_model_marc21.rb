@@ -12,7 +12,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   @archival_object_map = {
       [:repository, :finding_aid_language] => :handle_repo_code,
-      :title => :handle_title,
+      [:title, :linked_agents, :dates] => :handle_title,
       :linked_agents => :handle_agents,
       :subjects => :handle_subjects,
       :extents => :handle_extents,

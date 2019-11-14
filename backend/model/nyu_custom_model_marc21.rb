@@ -185,10 +185,16 @@ class MARCModel < ASpaceExport::ExportModel
         dates.find {|date| types.include? date['date_type'] }
       }.compact
 
+      chk_array = []
+      dates.each { |d|
+        d.keys.each { |k|
+          chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
+        }
+      }
+      chk_array.flatten!
       dates.each do |date|
-        code, val = nil
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
-
+        val = nil
         if date['expression'] && date['date_type'] != 'bulk'
           val = date['expression']
         elsif date['date_type'] == 'single'
@@ -202,10 +208,8 @@ class MARCModel < ASpaceExport::ExportModel
             val = "(bulk #{date['begin']}-#{date['end']})."
           end
         end
-        date_codes.push([code, val])
+        val += "." if code == 'f' && not(chk_array.include?("bulk"))
       end
-    end
-
     ind1 = creator.nil? ? "0" : "1"
     if date_codes.length > 0
       # we want to pass in all our date codes as separate subfield tags

@@ -175,7 +175,6 @@ class MARCModel < ASpaceExport::ExportModel
     df('099', ' ', ' ').with_sfs(['a', ids.join('.')])
   end
 
-
   def handle_title(title, linked_agents, dates)
     creator = linked_agents.find{|a| a['role'] == 'creator'}
     date_codes = []
@@ -189,16 +188,19 @@ class MARCModel < ASpaceExport::ExportModel
       dates.each do |date|
         code, val = nil
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
-        if date['expression']
+
+        if date['expression'] && date['date_type'] != 'bulk'
           val = date['expression']
-        elsif date['end']
-          if code == 'g' then
-            val = "(bulk #{date['begin']}-#{date['end']})."
-          else
-            val = "(#{date['begin']}-#{date['end']})."
-          end
+        elsif date['date_type'] == 'single'
+          val = date['begin']
+        elsif date['begin'] == date['end']
+          val = "(bulk #{date['begin']})."
         else
-          val = "#{date['begin']}"
+          if code == 'f'
+            val = "#{date['begin']}-#{date['end']}"
+          elsif code == 'g'
+            val = "(bulk #{date['begin']}-#{date['end']})."
+          end
         end
         date_codes.push([code, val])
       end

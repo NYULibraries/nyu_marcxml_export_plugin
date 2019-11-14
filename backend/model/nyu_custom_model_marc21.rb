@@ -12,7 +12,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   @archival_object_map = {
       [:repository, :finding_aid_language] => :handle_repo_code,
-      [:title, :linked_agents, :dates] => :handle_title,
+      :title => :handle_title,
       :linked_agents => :handle_agents,
       :subjects => :handle_subjects,
       :extents => :handle_extents,
@@ -36,7 +36,6 @@ class MARCModel < ASpaceExport::ExportModel
     attr_accessor :ind1
     attr_accessor :ind2
     attr_accessor :subfields
-
 
     def initialize(*args)
       @tag, @ind1, @ind2 = *args
@@ -149,6 +148,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   end
 
+
   def df!(*args)
     @sequence ||= 0
     @sequence += 1
@@ -176,38 +176,9 @@ class MARCModel < ASpaceExport::ExportModel
   end
 
 
-  def handle_title(title, linked_agents, dates)
-    creator = linked_agents.find{|a| a['role'] == 'creator'}
-    date_codes = []
-
-    # process dates first, if defined.
-    unless dates.empty?
-      dates = [["single", "inclusive", "range"], ["bulk"]].map {|types|
-        dates.find {|date| types.include? date['date_type'] }
-      }.compact
-
-      dates.each do |date|
-        code, val = nil
-        code = date['date_type'] == 'bulk' ? 'g' : 'f'
-        if date['expression']
-          val = date['expression']
-        elsif date['end']
-          val = "#{date['begin']}-#{date['end']}."
-        else
-          val = "#{date['begin']}"
-        end
-        date_codes.push([code, val])
-      end
-    end
-
-    ind1 = creator.nil? ? "0" : "1"
-    if date_codes.length > 0
-      # we want to pass in all our date codes as separate subfield tags
-      # e.g., with_sfs(['a', title], [code1, val1], [code2, val2]... [coden, valn])
-      df('245', ind1, '0').with_sfs(['a', title + ","], *date_codes)
-    else
-      df('245', ind1, '0').with_sfs(['a', title])
-    end
+  def handle_title(title)
+    title += ","
+    df('245', '1', '0').with_sfs(['a', title])
   end
 
 

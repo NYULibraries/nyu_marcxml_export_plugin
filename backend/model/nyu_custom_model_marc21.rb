@@ -185,39 +185,33 @@ class MARCModel < ASpaceExport::ExportModel
         dates.find {|date| types.include? date['date_type'] }
       }.compact
 
-      chk_array = []
-      dates.each { |d|
-        d.keys.each { |k|
-          chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
-        }
-      }
-      chk_array.flatten!
       dates.each do |date|
+        code, val = nil
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
-        val = nil
-        if date['expression'] && date['date_type'] != 'bulk'
+        if date['expression']
           val = date['expression']
-        elsif date['date_type'] == 'single'
-          val = date['begin']
-        elsif date['begin'] == date['end']
-          val = "(bulk #{date['begin']})."
-        else
-          if code == 'f'
-            val = "#{date['begin']}-#{date['end']}"
-          elsif code == 'g'
+        elsif date['end']
+          if code == 'g' then
             val = "(bulk #{date['begin']}-#{date['end']})."
+          else
+            val = "(#{date['begin']}-#{date['end']})"
           end
+        else
+          val = "#{date['begin']}"
         end
-        val += "." if code == 'f' && not(chk_array.include?("bulk"))
+
+        val += "." if code == 'f' && /bulk/.match(val) == nil
+        date_codes.push([code, val])
       end
-      ind1 = creator.nil? ? "0" : "1"
-      if date_codes.length > 0
-        # we want to pass in all our date codes as separate subfield tags
-        # e.g., with_sfs(['a', title], [code1, val1], [code2, val2]... [coden, valn])
-        df('245', ind1, '0').with_sfs(['a', title + ","], *date_codes)
-      else
-        df('245', ind1, '0').with_sfs(['a', title])
-      end
+    end
+
+    ind1 = creator.nil? ? "0" : "1"
+    if date_codes.length > 0
+      # we want to pass in all our date codes as separate subfield tags
+      # e.g., with_sfs(['a', title], [code1, val1], [code2, val2]... [coden, valn])
+      df('245', ind1, '0').with_sfs(['a', title + ","], *date_codes)
+    else
+      df('245', ind1, '0').with_sfs(['a', title])
     end
   end
 

@@ -37,6 +37,7 @@ class MARCModel < ASpaceExport::ExportModel
     attr_accessor :ind2
     attr_accessor :subfields
 
+
     def initialize(*args)
       @tag, @ind1, @ind2 = *args
       @subfields = []
@@ -166,14 +167,12 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
-  def source_to_code(source)
-    ASpaceMappings::MARC21.get_marc_source_code(source)
-  end
 
   def handle_id(*ids)
     ids.reject!{|i| i.nil? || i.empty?}
     df('099', ' ', ' ').with_sfs(['a', ids.join('.')])
   end
+
 
   def handle_title(title, linked_agents, dates)
     creator = linked_agents.find{|a| a['role'] == 'creator'}
@@ -185,14 +184,16 @@ class MARCModel < ASpaceExport::ExportModel
         dates.find {|date| types.include? date['date_type'] }
       }.compact
 
-
+      ## v2.7.0 plugin -- itterate through dates with index
       dates.each_with_index do |date, index|
         code, val = nil
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
         if date['expression']
           val = date['expression']
         elsif date['end']
+          ## v2.7.0 plugin -- check to see if the current date has code 'g'
           if code == 'g' then
+            ## if so surround with parenthesis, add the word 'bulk' terminate wit a period
             val = "(bulk #{date['begin']}-#{date['end']})."
           else
             val = "#{date['begin']}-#{date['end']}"
@@ -201,6 +202,8 @@ class MARCModel < ASpaceExport::ExportModel
           val = "#{date['begin']}"
         end
 
+        ## v2.7.0 plugin -- check to see if this is the final index of the date map and is of code 'f'
+        #  if so append a period to the date expression
         val += "." if index == dates.size - 1 && code == 'f'
 
         date_codes.push([code, val])
@@ -225,7 +228,7 @@ class MARCModel < ASpaceExport::ExportModel
     languages = lang_materials.map{|l| l['language_and_script']}.compact
 
     languages.each do |language|
-
+      ##v2.7.0 plugin add 0 to indc1
       df('041', '0', ' ').with_sfs(['a', language['language']])
 
     end
@@ -242,40 +245,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   end
 
-
-  def handle_dates(dates)
-    return false if dates.empty?
-
-    dates = [["single", "inclusive", "range"], ["bulk"]].map {|types|
-      dates.find {|date| types.include? date['date_type'] }
-    }.compact
-    chk_array = []
-    dates.each { |d|
-      d.keys.each { |k|
-        chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
-      }
-    }
-    chk_array.flatten!
-    dates.each do |date|
-      code = date['date_type'] == 'bulk' ? 'g' : 'f'
-      val = nil
-      if date['expression'] && date['date_type'] != 'bulk'
-        val = date['expression']
-      elsif date['date_type'] == 'single'
-        val = date['begin']
-      elsif date['begin'] == date['end']
-        val = "(bulk #{date['begin']})."
-      else
-        if code == 'f'
-          val = "#{date['begin']}-#{date['end']}"
-        elsif code == 'g'
-          val = "(bulk #{date['begin']}-#{date['end']})."
-        end
-      end
-      val += "." if code == 'f' && not(chk_array.include?("bulk"))
-      df('245', '1', '0').with_sfs([code, val])
-    end
-  end
+  ## handle_dates method removed all functionality moved to handle_title
 
 
   def handle_repo_code(repository, *finding_aid_language)
@@ -303,12 +273,12 @@ class MARCModel < ASpaceExport::ExportModel
       ]
     end
 
-    #Removing 852
+    # plugin -- Removing 852
     # df('852', ' ', ' ').with_sfs(*subfields_852)
 
     df('040', ' ', ' ').with_sfs(['a', repo['org_code']], ['b', finding_aid_language[0]],['c', repo['org_code']])
 
-    #Removing 049 field
+    # plugin -- Removing 049 field
     # df('049', ' ', ' ').with_sfs(['a', repo['org_code']])
 
     if repo.has_key?('country') && !repo['country'].empty?
@@ -323,7 +293,11 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
+  def source_to_code(source)
+    ASpaceMappings::MARC21.get_marc_source_code(source)
+  end
 
+  ## plugin -- nyu local handle_subjects metod def
   def handle_subjects(subjects)
     subjects.each do |link|
       subject = link['_resolved']
@@ -386,80 +360,6 @@ class MARCModel < ASpaceExport::ExportModel
       end
 
       df!(code, ind1, ind2).with_sfs(*sfs)
-    end
-  end
-
-
-  def handle_agents(linked_agents)
-
-    handle_primary_creator(linked_agents)
-    handle_other_creators(linked_agents)
-
-    subjects = linked_agents.select{|a| a['role'] == 'subject'}
-
-    subjects.each_with_index do |link, i|
-      subject = link['_resolved']
-      name = subject['display_name']
-      relator = link['relator']
-      terms = link['terms']
-      ind2 = source_to_code(name['source'])
-
-      case subject['agent_type']
-
-      when 'agent_corporate_entity'
-        code = '610'
-        ind1 = '2'
-        sfs = [
-            ['a', name['primary_name']],
-            ['b', name['subordinate_name_1']],
-            ['b', name['subordinate_name_2']],
-            ['n', name['number']],
-            ['g', name['qualifier']],
-        ]
-
-      when 'agent_person'
-        joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
-        name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
-        ind1 = name['name_order'] == 'direct' ? '0' : '1'
-        code = '600'
-        sfs = [
-            ['a', name_parts],
-            ['b', name['number']],
-            ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
-            ['q', name['fuller_form']],
-            ['d', name['dates']],
-            ['g', name['qualifier']],
-        ]
-
-      when 'agent_family'
-        code = '600'
-        ind1 = '3'
-        sfs = [
-            ['a', name['family_name']],
-            ['c', name['prefix']],
-            ['d', name['dates']],
-            ['g', name['qualifier']],
-        ]
-
-      end
-
-      terms.each do |t|
-        tag = case t['term_type']
-              when 'uniform_title'; 't'
-              when 'genre_form', 'style_period'; 'v'
-              when 'topical', 'cultural_context'; 'x'
-              when 'temporal'; 'y'
-              when 'geographic'; 'z'
-              end
-        sfs << [(tag), t['term']]
-      end
-
-      if ind2 == '7'
-        create_sfs2 = %w(local ingest)
-        sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
-      end
-
-      df(code, ind1, ind2, i).with_sfs(*sfs)
     end
   end
 
@@ -550,6 +450,81 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
+  ## plugin -- nyu local handle_agents method def
+  def handle_agents(linked_agents)
+
+    handle_primary_creator(linked_agents)
+    handle_other_creators(linked_agents)
+
+    subjects = linked_agents.select{|a| a['role'] == 'subject'}
+
+    subjects.each_with_index do |link, i|
+      subject = link['_resolved']
+      name = subject['display_name']
+      relator = link['relator']
+      terms = link['terms']
+      ind2 = source_to_code(name['source'])
+
+      case subject['agent_type']
+
+      when 'agent_corporate_entity'
+        code = '610'
+        ind1 = '2'
+        sfs = [
+            ['a', name['primary_name']],
+            ['b', name['subordinate_name_1']],
+            ['b', name['subordinate_name_2']],
+            ['n', name['number']],
+            ['g', name['qualifier']],
+        ]
+
+      when 'agent_person'
+        joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
+        name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
+        ind1 = name['name_order'] == 'direct' ? '0' : '1'
+        code = '600'
+        sfs = [
+            ['a', name_parts],
+            ['b', name['number']],
+            ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
+            ['q', name['fuller_form']],
+            ['d', name['dates']],
+            ['g', name['qualifier']],
+        ]
+
+      when 'agent_family'
+        code = '600'
+        ind1 = '3'
+        sfs = [
+            ['a', name['family_name']],
+            ['c', name['prefix']],
+            ['d', name['dates']],
+            ['g', name['qualifier']],
+        ]
+
+      end
+
+      terms.each do |t|
+        tag = case t['term_type']
+              when 'uniform_title'; 't'
+              when 'genre_form', 'style_period'; 'v'
+              when 'topical', 'cultural_context'; 'x'
+              when 'temporal'; 'y'
+              when 'geographic'; 'z'
+              end
+        sfs << [(tag), t['term']]
+      end
+
+      if ind2 == '7'
+        create_sfs2 = %w(local ingest)
+        sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
+      end
+
+      df(code, ind1, ind2, i).with_sfs(*sfs)
+    end
+  end
+
+  ## plugin -- nyu local handle_notes method def
   def handle_notes(notes)
 
     notes.each do |note|
@@ -639,6 +614,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   # 3/28/18: Updated: ANW-318
   def handle_ead_loc(ead_loc)
+    ## plugin add 555 with ead location.
     df('555', ' ', ' ').with_sfs(
         ['a', "Finding aid online:"],
         ['u', ead_loc]
@@ -648,7 +624,6 @@ class MARCModel < ASpaceExport::ExportModel
         ['u', ead_loc]
     )
   end
-
 
   def handle_ark(id, type='resource')
     # If ARKs are enabled, add an 856

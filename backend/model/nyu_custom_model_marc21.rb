@@ -185,7 +185,8 @@ class MARCModel < ASpaceExport::ExportModel
         dates.find {|date| types.include? date['date_type'] }
       }.compact
 
-      dates.each do |date|
+
+      dates.each_with_index do |date, index|
         code, val = nil
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
         if date['expression']
@@ -200,7 +201,8 @@ class MARCModel < ASpaceExport::ExportModel
           val = "#{date['begin']}"
         end
 
-        val += "." if code == 'f' && /bulk/.match(val) == nil
+        val += "." if index == dates.size - 1 && code == 'f'
+
         date_codes.push([code, val])
       end
     end

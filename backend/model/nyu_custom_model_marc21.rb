@@ -195,7 +195,7 @@ class MARCModel < ASpaceExport::ExportModel
           if code == 'g' then
             val = "(bulk #{date['begin']}-#{date['end']})."
           else
-            val = "(#{date['begin']}-#{date['end']})"
+            val = "#{date['begin']}-#{date['end']}"
           end
         else
           val = "#{date['begin']}"

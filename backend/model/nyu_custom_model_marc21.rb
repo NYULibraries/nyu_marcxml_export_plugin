@@ -282,13 +282,13 @@ class MARCModel < ASpaceExport::ExportModel
     # df('049', ' ', ' ').with_sfs(['a', repo['org_code']])
 
     if repo.has_key?('country') && !repo['country'].empty?
-
-      # US is a special case, because ASpace has no knowledge of states, the
-      # correct value is 'xxu'
+    #
+    #  # US is a special case, because ASpace has no knowledge of states, the
+    #  # correct value is 'xxu'
       if repo['country'] == "US"
-        df('044', ' ', ' ').with_sfs(['a', "xxu"])
+       df('044', ' ', ' ').with_sfs(['a', "xxu"])
       else
-        df('044', ' ', ' ').with_sfs(['a', repo['country'].downcase])
+       df('044', ' ', ' ').with_sfs(['a', repo['country'].downcase])
       end
     end
   end
@@ -559,7 +559,7 @@ class MARCModel < ASpaceExport::ExportModel
                     ind1 = note['publish'] ? '1' : '0'
                     ['541', ind1, ' ', 'a']
                   when 'relatedmaterial'
-                    ['544','d']
+                    ['544','n']
                   #when 'bioghist'
                     #['545','a']
                   when 'custodhist'

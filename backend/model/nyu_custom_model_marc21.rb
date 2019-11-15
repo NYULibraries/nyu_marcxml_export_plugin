@@ -116,10 +116,12 @@ class MARCModel < ASpaceExport::ExportModel
   def self.assemble_controlfield_string(obj)
 
     date = obj.dates[0] || {}
+
     string = obj['system_mtime'].scan(/\d{2}/)[1..3].join('')
-    string += obj.level == 'item' && date['date_type'] == 'single' ? 's' : 'i'
+    string += date['date_type'] == 'single' ? 's' : 'i'
     string += date['begin'] ? date['begin'][0..3] : "    "
     string += date['end'] ? date['end'][0..3] : "    "
+
 
     repo = obj['repository']['_resolved']
 
@@ -135,6 +137,7 @@ class MARCModel < ASpaceExport::ExportModel
       string += "xx"
     end
 
+    18.times { string += ' ' }
     # If only one Language and Script subrecord its code value should be exported in the MARC 008 field position 35-37; If more than one Language and Script subrecord is recorded, a value of "mul" should be exported in the MARC 008 field position 35-37.
     lang_materials = obj.lang_materials
     languages = lang_materials.map{|l| l['language_and_script']}.compact

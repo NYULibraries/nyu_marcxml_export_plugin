@@ -183,23 +183,10 @@ class MARCModel < ASpaceExport::ExportModel
         dates.find {|date| types.include? date['date_type'] }
       }.compact
 
-<<<<<<< HEAD
-
-      chk_array = []
-      dates.each { |d|
-        d.keys.each { |k|
-          chk_array << [k,d[k]]  if (k =~ /date/ && d[k] == 'bulk')
-        }
-      }
-
-      chk_array.flatten!
-
-      dates.each do |date|
-=======
       ## v2.7.0 plugin -- itterate through dates with index
       dates.each_with_index do |date, index|
         code, val = nil
->>>>>>> 962312cf31aea3e7d58f3ddeb22260d760bd4a28
+
         code = date['date_type'] == 'bulk' ? 'g' : 'f'
         if date['expression']
           val = date['expression']
@@ -214,20 +201,6 @@ class MARCModel < ASpaceExport::ExportModel
         else
           val = "#{date['begin']}"
         end
-<<<<<<< HEAD
-        val += "." if code == 'f' && not(chk_array.include?("bulk"))
-        date_codes.push([code, val])
-      end
-    end
-
-    ind1 = creator.nil? ? "0" : "1"
-    if date_codes.length > 0
-      # we want to pass in all our date codes as separate subfield tags
-      # e.g., with_sfs(['a', title], [code1, val1], [code2, val2]... [coden, valn])
-      df('245', ind1, '0').with_sfs(['a', title + ","], *date_codes)
-    else
-      df('245', ind1, '0').with_sfs(['a', title])
-=======
 
         ## v2.7.0 plugin -- check to see if this is the final index of the date map and is of code 'f'
         #  if so append a period to the date expression
@@ -235,7 +208,6 @@ class MARCModel < ASpaceExport::ExportModel
 
         date_codes.push([code, val])
       end
->>>>>>> 962312cf31aea3e7d58f3ddeb22260d760bd4a28
     end
 
     ind1 = creator.nil? ? "0" : "1"

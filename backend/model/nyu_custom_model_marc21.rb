@@ -281,16 +281,18 @@ class MARCModel < ASpaceExport::ExportModel
     # plugin -- Removing 049 field
     # df('049', ' ', ' ').with_sfs(['a', repo['org_code']])
 
-    if repo.has_key?('country') && !repo['country'].empty?
+    # plugin -- removing 044
+    #if repo.has_key?('country') && !repo['country'].empty?
     #
     #  # US is a special case, because ASpace has no knowledge of states, the
     #  # correct value is 'xxu'
-      if repo['country'] == "US"
-       df('044', ' ', ' ').with_sfs(['a', "xxu"])
-      else
-       df('044', ' ', ' ').with_sfs(['a', repo['country'].downcase])
-      end
-    end
+    #  if repo['country'] == "US"
+    #    df('044', ' ', ' ').with_sfs(['a', "xxu"])
+    #  else
+    #    df('044', ' ', ' ').with_sfs(['a', repo['country'].downcase])
+    #  end
+    #end
+
   end
 
   def source_to_code(source)

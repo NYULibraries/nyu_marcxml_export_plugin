@@ -119,10 +119,31 @@ class MARCModel < ASpaceExport::ExportModel
     string += date['date_type'] == 'single' ? 's' : 'i'
     string += date['begin'] ? date['begin'][0..3] : "    "
     string += date['end'] ? date['end'][0..3] : "    "
-    string += "xx"
-    18.times { string += ' ' }
-    string += (obj.language || '|||')
+
+    repo = obj['repository']['_resolved']
+
+    if repo.has_key?('country') && !repo['country'].empty?
+      # US is a special case, because ASpace has no knowledge of states, the
+      # correct value is 'xxu'
+      if repo['country'] == "US"
+        string += "xxu"
+      else
+        string += repo['country'].downcase
+      end
+    else
+      string += "xx"
+    end
+
+    # If only one Language and Script subrecord its code value should be exported in the MARC 008 field position 35-37; If more than one Language and Script subrecord is recorded, a value of "mul" should be exported in the MARC 008 field position 35-37.
+    lang_materials = obj.lang_materials
+    languages = lang_materials.map{|l| l['language_and_script']}.compact
+    langcode = languages.count == 1 ? languages[0]['language'] : 'mul'
+
+    # variable number of spaces needed since country code could have 2 or 3 chars
+    #(35-(string.length)).times { string += ' ' }
+    string += (langcode || '|||')
     string += ' d'
+
     string
   end
 

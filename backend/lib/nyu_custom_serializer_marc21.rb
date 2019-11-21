@@ -60,6 +60,7 @@ class MARCSerializer < ASpaceExport::Serializer
           xml.text marc.controlfield_string
         }
 
+        #v2.7.0 removing field sorting
         #sorted_datafields = marc.datafields.sort {|a, b| a.tag <=> b.tag}
 
         marc.datafields.each do |df|

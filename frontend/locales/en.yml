@@ -1,0 +1,7 @@
+en:
+  plugins:
+    nyu_marcxml_export_plugin:
+      label: NYU MARC XML Export Plugin
+      title: NYU MARC XML Export Plugin
+      version: 2.8.0
+      url: https://github.com/NYULibraries/nyu_marcxml_export_plugin/releases/tag/v2.8.0

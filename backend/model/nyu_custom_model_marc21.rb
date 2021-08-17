@@ -475,37 +475,25 @@ class MARCModel < ASpaceExport::ExportModel
       when 'agent_corporate_entity'
         code = '610'
         ind1 = '2'
-        sfs = [
-            ['a', name['primary_name']],
-            ['b', name['subordinate_name_1']],
-            ['b', name['subordinate_name_2']],
-            ['n', name['number']],
-            ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, subject, terms)
 
       when 'agent_person'
         joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
         name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
         ind1 = name['name_order'] == 'direct' ? '0' : '1'
         code = '600'
-        sfs = [
-            ['a', name_parts],
-            ['b', name['number']],
-            ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
-            ['q', name['fuller_form']],
-            ['d', name['dates']],
-            ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_person_subfield_mappings(name, relator_sfs, subject, terms)
+
 
       when 'agent_family'
         code = '600'
         ind1 = '3'
-        sfs = [
-            ['a', name['family_name']],
-            ['c', name['prefix']],
-            ['d', name['dates']],
-            ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_family_subfield_mappings(name, relator_sfs, subject, terms)
+
+      when 'agent_software'
+        code = '653'
+        ind1 = ' '
+        sfs = [['a', name['software_name']]]
 
       end
 
@@ -519,6 +507,9 @@ class MARCModel < ASpaceExport::ExportModel
               end
         sfs << [(tag), t['term']]
       end
+
+      # ANW-825: Don't export $0 if $v, $x, $y, or $z are present
+      sfs.reject! {|k| k[0] == 0 } if (['v', 'x', 'y', 'z'] - sfs.map { |k| k[0] }).length < 4
 
       if ind2 == '7'
         create_sfs2 = %w(local ingest)
@@ -700,7 +691,7 @@ class MARCModel < ASpaceExport::ExportModel
     return value_found
   end
 
-  def gather_agent_person_subfield_mappings(name, role_info, agent)
+  def gather_agent_person_subfield_mappings(name, role_info, agent, terms=nil)
     joint = name['name_order'] == 'direct' ? ' ' : ', '
     name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
 
@@ -727,6 +718,10 @@ class MARCModel < ASpaceExport::ExportModel
         subfield_e,
         ["g", qualifier],
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
+
+    unless terms.nil?
+      name_fields.concat handle_agent_terms(terms)
+    end
 
     name_fields = handle_agent_person_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -768,7 +763,7 @@ class MARCModel < ASpaceExport::ExportModel
   end
 
 
-  def gather_agent_family_subfield_mappings(name, role_info, agent)
+  def gather_agent_family_subfield_mappings(name, role_info, agent, terms=nil)
     if role_info.nil? || role_info.empty?
       subfield_e = nil
       subfield_4 = nil
@@ -787,6 +782,10 @@ class MARCModel < ASpaceExport::ExportModel
         ['c', qualifier],
         subfield_e,
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
+
+    unless terms.nil?
+      name_fields.concat handle_agent_terms(terms)
+    end
 
     name_fields = handle_agent_family_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -857,7 +856,7 @@ class MARCModel < ASpaceExport::ExportModel
     return name_fields
   end
 
-  def gather_agent_corporate_subfield_mappings(name, role_info, agent)
+  def gather_agent_corporate_subfield_mappings(name, role_info, agent, terms=nil)
     if role_info.nil? || role_info.empty?
       subfield_e = nil
       subfield_4 = nil
@@ -897,6 +896,10 @@ class MARCModel < ASpaceExport::ExportModel
         ['n', number],
         ['g', qualifier]
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
+
+    unless terms.nil?
+      name_fields.concat handle_agent_terms(terms)
+    end
 
     name_fields = handle_agent_corporate_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?

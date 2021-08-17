@@ -11,20 +11,20 @@ class MARCModel < ASpaceExport::ExportModel
   end
 
   @archival_object_map = {
-      [:repository, :finding_aid_language] => :handle_repo_code,
-      [:title, :linked_agents, :dates] => :handle_title,
-      :linked_agents => :handle_agents,
-      :subjects => :handle_subjects,
-      :extents => :handle_extents,
-      :lang_materials => :handle_languages
+    [:repository, :finding_aid_language] => :handle_repo_code,
+    [:title, :linked_agents, :dates] => :handle_title,
+    :linked_agents => :handle_agents,
+    :subjects => :handle_subjects,
+    :extents => :handle_extents,
+    :lang_materials => :handle_languages
   }
 
   @resource_map = {
-      [:id_0, :id_1, :id_2, :id_3] => :handle_id,
-      [:ead_location] => :handle_ead_loc,
-      [:id, :jsonmodel_type] => :handle_ark,
-      :notes => :handle_notes,
-      :finding_aid_description_rules => df_handler('fadr', '040', ' ', ' ', 'e')
+    [:id_0, :id_1, :id_2, :id_3] => :handle_id,
+    [:ead_location] => :handle_ead_loc,
+    [:id, :jsonmodel_type] => :handle_ark,
+    :notes => :handle_notes,
+    :finding_aid_description_rules => df_handler('fadr', '040', ' ', ' ', 'e')
   }
 
   attr_accessor :leader_string
@@ -260,16 +260,16 @@ class MARCModel < ASpaceExport::ExportModel
 
     if repo['parent_institution_name']
       subfields_852 = [
-          ['a', repo['parent_institution_name']],
-          ['b', repo['name']]
+        ['a', repo['parent_institution_name']],
+        ['b', repo['name']]
       ]
     elsif repo['org_code']
       subfields_852 = [
-          ['a', repo['org_code']],
+        ['a', repo['org_code']],
       ]
     else
       subfields_852 = [
-          ['a', repo['name']]
+        ['a', repo['name']]
       ]
     end
 
@@ -376,11 +376,11 @@ class MARCModel < ASpaceExport::ExportModel
 
     ind2 = ' '
 
-    relator_sfs = []
     if link['relator']
-      handle_relators(relator_sfs, link['relator'])
+      relator = I18n.t("enumerations.linked_agent_archival_record_relators.#{link['relator']}")
+      role_info = ['4', relator]
     else
-      relator_sfs << ['e', 'creator']
+      role_info = ['e', 'creator']
     end
 
     case creator['agent_type']
@@ -388,17 +388,17 @@ class MARCModel < ASpaceExport::ExportModel
     when 'agent_corporate_entity'
       code = '110'
       ind1 = '2'
-      sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, creator)
+      sfs = gather_agent_corporate_subfield_mappings(name, role_info, creator)
 
     when 'agent_person'
       ind1  = name['name_order'] == 'direct' ? '0' : '1'
       code = '100'
-      sfs = gather_agent_person_subfield_mappings(name, relator_sfs, creator)
+      sfs = gather_agent_person_subfield_mappings(name, role_info, creator)
 
     when 'agent_family'
       code = '100'
       ind1 = '3'
-      sfs = gather_agent_family_subfield_mappings(name, relator_sfso, creator)
+      sfs = gather_agent_family_subfield_mappings(name, role_info, creator)
 
     end
 
@@ -419,11 +419,12 @@ class MARCModel < ASpaceExport::ExportModel
       terms = link['terms']
       role = link['role']
 
-      relator_sfs = []
       if link['relator']
-        handle_relators(relator_sfs, link['relator'])
+        relator_sf = ['4', link['relator']]
+      elsif role == 'source'
+        relator_sf =  ['e', 'former owner']
       else
-        relator_sfs << ['e', 'creator']
+        relator_sf = ['e', 'creator']
       end
 
       ind2 = ' '
@@ -433,17 +434,17 @@ class MARCModel < ASpaceExport::ExportModel
       when 'agent_corporate_entity'
         code = '710'
         ind1 = '2'
-        sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, creator)
+        sfs = gather_agent_corporate_subfield_mappings(name, relator_sf, creator)
 
       when 'agent_person'
         ind1  = name['name_order'] == 'direct' ? '0' : '1'
         code = '700'
-        sfs = gather_agent_person_subfield_mappings(name, relator_sfs, creator)
+        sfs = gather_agent_person_subfield_mappings(name, relator_sf, creator)
 
       when 'agent_family'
         ind1 = '3'
         code = '700'
-        sfs = gather_agent_family_subfield_mappings(name, relator_sfs, creator)
+        sfs = gather_agent_family_subfield_mappings(name, relator_sf, creator)
 
       end
 
@@ -462,38 +463,46 @@ class MARCModel < ASpaceExport::ExportModel
     subjects.each_with_index do |link, i|
       subject = link['_resolved']
       name = subject['display_name']
+      relator = link['relator']
       terms = link['terms']
       ind2 = source_to_code(name['source'])
-
-      relator_sfs = []
-      if link['relator']
-        handle_relators(relator_sfs, link['relator'])
-      end
 
       case subject['agent_type']
 
       when 'agent_corporate_entity'
         code = '610'
         ind1 = '2'
-        sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, subject, terms)
+        sfs = [
+          ['a', name['primary_name']],
+          ['b', name['subordinate_name_1']],
+          ['b', name['subordinate_name_2']],
+          ['n', name['number']],
+          ['g', name['qualifier']],
+        ]
 
       when 'agent_person'
         joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
         name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
         ind1 = name['name_order'] == 'direct' ? '0' : '1'
         code = '600'
-        sfs = gather_agent_person_subfield_mappings(name, relator_sfs, subject, terms)
-
+        sfs = [
+          ['a', name_parts],
+          ['b', name['number']],
+          ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
+          ['q', name['fuller_form']],
+          ['d', name['dates']],
+          ['g', name['qualifier']],
+        ]
 
       when 'agent_family'
         code = '600'
         ind1 = '3'
-        sfs = gather_agent_family_subfield_mappings(name, relator_sfs, subject, terms)
-
-      when 'agent_software'
-        code = '653'
-        ind1 = ' '
-        sfs = [['a', name['software_name']]]
+        sfs = [
+          ['a', name['family_name']],
+          ['c', name['prefix']],
+          ['d', name['dates']],
+          ['g', name['qualifier']],
+        ]
 
       end
 
@@ -507,9 +516,6 @@ class MARCModel < ASpaceExport::ExportModel
               end
         sfs << [(tag), t['term']]
       end
-
-      # ANW-825: Don't export $0 if $v, $x, $y, or $z are present
-      sfs.reject! {|k| k[0] == 0 } if (['v', 'x', 'y', 'z'] - sfs.map { |k| k[0] }).length < 4
 
       if ind2 == '7'
         create_sfs2 = %w(local ingest)
@@ -545,7 +551,7 @@ class MARCModel < ASpaceExport::ExportModel
                     ['500','a']
                   when 'accessrestrict'
                     ['506','a']
-                  #when 'scopecontent'
+                    #when 'scopecontent'
                     #['520', '2', ' ', 'a']
                   when 'abstract'
                     ['520', '3', ' ', 'a']
@@ -556,7 +562,7 @@ class MARCModel < ASpaceExport::ExportModel
                     ['541', ind1, ' ', 'a']
                   when 'relatedmaterial'
                     ['544','n']
-                  #when 'bioghist'
+                    #when 'bioghist'
                     #['545','a']
                   when 'custodhist'
                     ind1 = note['publish'] ? '1' : '0'
@@ -612,12 +618,12 @@ class MARCModel < ASpaceExport::ExportModel
   def handle_ead_loc(ead_loc)
     ## plugin add 555 with ead location.
     df('555', ' ', ' ').with_sfs(
-        ['a', "Finding aid online:"],
-        ['u', ead_loc]
+      ['a', "Finding aid online:"],
+      ['u', ead_loc]
     )
     df('856', '4', '2').with_sfs(
-        ['y', "Finding aid online"],
-        ['u', ead_loc]
+      ['y', "Finding aid online"],
+      ['u', ead_loc]
     )
   end
 
@@ -630,8 +636,8 @@ class MARCModel < ASpaceExport::ExportModel
     if AppConfig[:arks_enabled]
       ark_url = ArkName::get_ark_url(id, type.to_sym)
       df('856', '4', '2').with_sfs(
-          ['z', "Archival Resource Key:"],
-          ['u', ark_url]
+        ['z', "Archival Resource Key:"],
+        ['u', ark_url]
       ) unless ark_url.nil? || ark_url.empty?
 
     end
@@ -691,7 +697,7 @@ class MARCModel < ASpaceExport::ExportModel
     return value_found
   end
 
-  def gather_agent_person_subfield_mappings(name, role_info, agent, terms=nil)
+  def gather_agent_person_subfield_mappings(name, role_info, agent)
     joint = name['name_order'] == 'direct' ? ' ' : ', '
     name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
 
@@ -710,18 +716,14 @@ class MARCModel < ASpaceExport::ExportModel
     fuller_form = name['fuller_form'] rescue nil
 
     name_fields = [
-        ["a", name_parts],
-        ["b", number],
-        ["q", fuller_form],
-        ["c", extras],
-        ["d", dates],
-        subfield_e,
-        ["g", qualifier],
+      ["a", name_parts],
+      ["b", number],
+      ["q", fuller_form],
+      ["c", extras],
+      ["d", dates],
+      subfield_e,
+      ["g", qualifier],
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
-
-    unless terms.nil?
-      name_fields.concat handle_agent_terms(terms)
-    end
 
     name_fields = handle_agent_person_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -763,7 +765,7 @@ class MARCModel < ASpaceExport::ExportModel
   end
 
 
-  def gather_agent_family_subfield_mappings(name, role_info, agent, terms=nil)
+  def gather_agent_family_subfield_mappings(name, role_info, agent)
     if role_info.nil? || role_info.empty?
       subfield_e = nil
       subfield_4 = nil
@@ -777,15 +779,11 @@ class MARCModel < ASpaceExport::ExportModel
     dates       = name['dates'] rescue nil
 
     name_fields = [
-        ['a', family_name],
-        ['d', dates],
-        ['c', qualifier],
-        subfield_e,
+      ['a', family_name],
+      ['d', dates],
+      ['c', qualifier],
+      subfield_e,
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
-
-    unless terms.nil?
-      name_fields.concat handle_agent_terms(terms)
-    end
 
     name_fields = handle_agent_family_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -856,7 +854,7 @@ class MARCModel < ASpaceExport::ExportModel
     return name_fields
   end
 
-  def gather_agent_corporate_subfield_mappings(name, role_info, agent, terms=nil)
+  def gather_agent_corporate_subfield_mappings(name, role_info, agent)
     if role_info.nil? || role_info.empty?
       subfield_e = nil
       subfield_4 = nil
@@ -889,17 +887,13 @@ class MARCModel < ASpaceExport::ExportModel
     end
 
     name_fields = [
-        ['a', primary_name],
-        ['b', subfield_b_1],
-        ['b', subfield_b_2],
-        subfield_e,
-        ['n', number],
-        ['g', qualifier]
+      ['a', primary_name],
+      ['b', subfield_b_1],
+      ['b', subfield_b_2],
+      subfield_e,
+      ['n', number],
+      ['g', qualifier]
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
-
-    unless terms.nil?
-      name_fields.concat handle_agent_terms(terms)
-    end
 
     name_fields = handle_agent_corporate_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -909,17 +903,6 @@ class MARCModel < ASpaceExport::ExportModel
     name_fields.push(subfield_0) unless subfield_0.nil?
 
     return name_fields
-  end
-
-
-  def handle_relators(relator_sfs, link)
-    relator = I18n.t("enumerations.linked_agent_archival_record_relators.#{link}")
-    relator_sfs << ['4', link]
-    unless relator.to_s.include?('translation missing')
-      relator_sfs << ['e', relator]
-    end
-
-    return relator_sfs
   end
 
 end

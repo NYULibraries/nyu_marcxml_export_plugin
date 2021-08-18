@@ -1,2 +1,2 @@
 AppConfig[:plugins] = ['nyu_marcxml_export_plugin']
-plugin_version:3.0.1b
+plugin_version:3.0.2

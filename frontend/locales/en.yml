@@ -3,5 +3,5 @@ en:
     nyu_marcxml_export_plugin:
       label: NYU MARC XML Export Plugin
       title: NYU MARC XML Export Plugin
-      version: 3.0.1b
+      version: 3.0.2
       url: https://github.com/NYULibraries/nyu_marcxml_export_plugin/releases/tag/v3.0.1b

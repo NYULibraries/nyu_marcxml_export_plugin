@@ -345,6 +345,11 @@ class MARCModel < ASpaceExport::ExportModel
               end
         sfs << [tag, t['term']]
       end
+      
+      # code borrowed from Yale to export subject authority id
+      unless subject['authority_id'].nil?
+        sfs << ['0', subject['authority_id']]
+      end
 
       # N.B. ind2 is an array at this point.
       if ind2[0] == '7'

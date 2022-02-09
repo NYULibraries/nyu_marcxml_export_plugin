@@ -41,7 +41,8 @@ class MARCCustomFieldSerialize
         top_containers = @record.aspace_record['top_containers']
         top_containers.each_key{ |id|
           info = top_containers[id]
-          if(info[:barcode] != nil) then
+          loc = info[:location]
+          if(info[:barcode] != nil && loc != nil && /Flat file/.match?(loc) != true && /Flat File/.match?(loc) != true ) then
             @field_pairs << add_863_tag(info)
             @field_pairs << add_949_tag(info)
           end

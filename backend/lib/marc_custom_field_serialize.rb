@@ -148,7 +148,7 @@ class MARCCustomFieldSerialize
   def add_001_tag
     value = get_mms_id
     if value != nil
-      controlfield_hsh = get_controlfield_hash('',value)
+      controlfield_hsh = get_controlfield_hash('001',value)
       cf = NYUCustomTag.new(controlfield_hsh)
       cf.add_controlfield_tag
     end
@@ -250,6 +250,7 @@ class MARCCustomFieldSerialize
     end
     mms_id
   end
+
   def process_repo_code
     subfields = {}
     # get subfield values for repo code

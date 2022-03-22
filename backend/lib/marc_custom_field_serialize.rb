@@ -18,8 +18,10 @@ class MARCCustomFieldSerialize
 
   def controlfields
     cf = []
-    org_codes = %w(NNU-TL NNU-F NyNyUA NyNyUAD NyNyUCH NBPol NyBlHS NHi)
+    #org_codes = %w(NNU-TL NNU-F NyNyUA NyNyUAD NyNyUCH NBPol NyBlHS NHi)
+    org_codes = %w(LPA1 LPA2 PHC)
     org_code = get_repo_org_code
+    cf << add_001_tag if get_mms_id != nil
     cf << add_003_tag(org_code) if org_codes.include?(org_code)
     cf << add_005_tag
     @record.controlfields = cf
@@ -42,10 +44,12 @@ class MARCCustomFieldSerialize
         top_containers.each_key{ |id|
           info = top_containers[id]
           loc = info[:location]
-          if(info[:barcode] != nil && loc != nil && /Flat file/.match?(loc) != true && /Flat File/.match?(loc) != true ) then
-            @field_pairs << add_863_tag(info)
-            @field_pairs << add_949_tag(info)
-          end
+          #if(info[:barcode] != nil && loc != nil && /Flat file/.match?(loc) != true && /Flat File/.match?(loc) != true ) then
+            #@field_pairs << add_863_tag(info)
+            #@field_pairs << add_949_tag(info)
+          #end
+          @field_pairs << add_863_tag(info)
+          @field_pairs << add_949_tag(info)
         }
       end
     end
@@ -140,7 +144,15 @@ class MARCCustomFieldSerialize
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
-
+  # TriCo method for adding 001 field for mms_id if one already exists
+  def add_001_tag
+    value = get_mms_id
+    if value != nil
+      controlfield_hsh = get_controlfield_hash('',value)
+      cf = NYUCustomTag.new(controlfield_hsh)
+      cf.add_controlfield_tag
+    end
+  end
   def add_853_tag
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('853','0','0')
@@ -170,7 +182,9 @@ class MARCCustomFieldSerialize
     datafield_hsh = get_datafield_hash('949','0','')
     # have to have a hash by position as the key
     # since the subfield positions matter
-    subfields_hsh[1] = get_subfield_hash('a','NNU')
+    #subfields_hsh[1] = get_subfield_hash('a','NNU')
+    # would need to make logic here to choose the correct orginating institution (HVC, BMC,...), according to the repository (repo_org_code)
+    subfields_hsh[1] = get_subfield_hash('a','HVC')
     subfields_hsh[4] = get_subfield_hash('t','4')
     subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
@@ -196,9 +210,12 @@ class MARCCustomFieldSerialize
 
   def get_allowed_values
     allowed_values = {}
-    allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
-    allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
-    allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
+    #allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
+    #allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
+    #allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
+    allowed_values['lparchive'] = { b: 'sm', c: 'st' }
+    allowed_values['lparchive2'] = { b: 'br', c: 'brarc'}
+    allowed_values['Haverford'] = { b: 'hq', c: 'htman'}
     allowed_values
   end
 
@@ -223,7 +240,16 @@ class MARCCustomFieldSerialize
     end
     repo_code
   end
-
+  #TriCo method for getting the mms_id from the string_2 field
+  def get_mms_id
+    mms_id = nil
+    if @record.aspace_record.has_key?('user_defined')
+      if @record.aspace_record['user_defined'].has_key?('string_2')
+        mms_id = @record.aspace_record['user_defined']['string_2']
+      end
+    end
+    mms_id
+  end
   def process_repo_code
     subfields = {}
     # get subfield values for repo code

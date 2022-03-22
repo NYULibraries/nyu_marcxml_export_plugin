@@ -22,7 +22,7 @@ class MARCModel < ASpaceExport::ExportModel
   @resource_map = {
     [:id_0, :id_1, :id_2, :id_3] => :handle_id,
     [:ead_location] => :handle_ead_loc,
-    [:id, :jsonmodel_type] => :handle_ark,
+    [:ark_name] => :handle_ark,
     :notes => :handle_notes,
     :finding_aid_description_rules => df_handler('fadr', '040', ' ', ' ', 'e')
   }
@@ -351,7 +351,7 @@ class MARCModel < ASpaceExport::ExportModel
         sfs << ['0', subject['authority_id']]
       end
 
-      
+
       # N.B. ind2 is an array at this point.
       if ind2[0] == '7'
         sfs << ['2', subject['source']]
@@ -634,20 +634,19 @@ class MARCModel < ASpaceExport::ExportModel
       ['u', ead_loc]
     )
   end
-
-  def handle_ark(id, type='resource')
+# updated this to work with ArchivesSpace v3.2.0
+  def handle_ark(ark_name)
     # If ARKs are enabled, add an 856
     #<datafield tag="856" ind1="4" ind2="2">
     #  <subfield code="z">Archival Resource Key:</subfield>
     #  <subfield code="u">ARK URL</subfield>
     #</datafield>
     if AppConfig[:arks_enabled]
-      ark_url = ArkName::get_ark_url(id, type.to_sym)
+      ark_url = ark_name['current']
       df('856', '4', '2').with_sfs(
         ['z', "Archival Resource Key:"],
         ['u', ark_url]
       ) unless ark_url.nil? || ark_url.empty?
-
     end
   end
 

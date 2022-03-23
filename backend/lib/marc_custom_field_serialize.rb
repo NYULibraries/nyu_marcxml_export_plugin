@@ -19,7 +19,7 @@ class MARCCustomFieldSerialize
   def controlfields
     cf = []
     #org_codes = %w(NNU-TL NNU-F NyNyUA NyNyUAD NyNyUCH NBPol NyBlHS NHi)
-    org_codes = %w(LPA1 LPA2 PHC)
+    org_codes = %w(LPA1 LPA2 PHC Pbm PSH PSC-P)
     org_code = get_repo_org_code
     cf << add_001_tag if get_mms_id != nil
     cf << add_003_tag(org_code) if org_codes.include?(org_code)
@@ -215,7 +215,9 @@ class MARCCustomFieldSerialize
     #allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
     allowed_values['lparchive'] = { b: 'sm', c: 'st' }
     allowed_values['lparchive2'] = { b: 'br', c: 'brarc'}
+    allowed_values['Bryn Mawr'] = { b: 'br', c: 'brarc'}
     allowed_values['Haverford'] = { b: 'hq', c: 'htman'}
+    allowed_values['SCPC'] = { b: 'sp', c: 'pacb' }
     allowed_values
   end
 

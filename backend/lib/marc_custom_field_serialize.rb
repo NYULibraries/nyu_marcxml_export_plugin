@@ -19,10 +19,10 @@ class MARCCustomFieldSerialize
   def controlfields
     cf = []
     #org_codes = %w(NNU-TL NNU-F NyNyUA NyNyUAD NyNyUCH NBPol NyBlHS NHi)
-    org_codes = %w(LPA1 LPA2 PHC Pbm PSH PSC-P)
+    #org_codes = %w(LPA1 LPA2 PHC Pbm PSH PSP BMC HVC QUAKMEET)
     org_code = get_repo_org_code
     cf << add_001_tag if get_mms_id != nil
-    cf << add_003_tag(org_code) if org_codes.include?(org_code)
+    cf << add_003_tag(org_code)
     cf << add_005_tag
     @record.controlfields = cf
   end
@@ -183,24 +183,35 @@ class MARCCustomFieldSerialize
     # have to have a hash by position as the key
     # since the subfield positions matter
     #subfields_hsh[1] = get_subfield_hash('a','NNU')
-    # would need to make logic here to choose the correct orginating institution (HVC, BMC,...), according to the repository (repo_org_code)
-    subfields_hsh[1] = get_subfield_hash('a','HVC')
+    # I don't think that I need subfield a? LP
+    #subfields_hsh[1] = get_subfield_hash('a','HVC')
     subfields_hsh[4] = get_subfield_hash('t','4')
     subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
     subfields_hsh[7] = get_subfield_hash('i','04')
-    subfields_hsh[8] = get_location(info[:location])
+    #subfields_hsh[8] = get_location(info[:location])
+    subfields_hsh[8] = get_subfield_hash('s','fake shelf location')
     subfields_hsh[9] = get_subfield_hash('p',info[:barcode]) if info[:barcode]
     subfields_hsh[10] = get_subfield_hash('w',"Box #{info[:indicator]}")
     subfields_hsh[11] = get_subfield_hash('e',info[:indicator])
     # merge repo code hash with existing subfield code hash
-    subfields_hsh.merge!(process_repo_code)
+    subfields_hsh.merge!(get_location(info[:location]))
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
 
   def get_repo_org_code
-    @record.aspace_record['repository']['_resolved']['org_code']
+    alma_org_codes = {
+      'PSC-P' => 'PSP', 
+      'PSH' => 'PSH', 
+      'Pbm' => 'BMC', 
+      'PHC' =>'HVC',
+      'QUAKMEET' => 'QUAKMEET',
+      'LPA1' => 'LPA1',
+      'LPA2' => 'LPA2'
+    }
+    org_code = @record.aspace_record['repository']['_resolved']['org_code']
+    alma_org_codes[org_code]
   end
 
   def get_record_repo_value
@@ -218,6 +229,7 @@ class MARCCustomFieldSerialize
     allowed_values['Bryn Mawr'] = { b: 'br', c: 'brarc'}
     allowed_values['Haverford'] = { b: 'hq', c: 'htman'}
     allowed_values['SCPC'] = { b: 'sp', c: 'pacb' }
+    allowed_values['QuakMeet'] = { b: 'hq', c: 'hqmtg'}
     allowed_values
   end
 
@@ -253,17 +265,17 @@ class MARCCustomFieldSerialize
     mms_id
   end
 
-  def process_repo_code
-    subfields = {}
+  #def process_repo_code
+    #subfields = {}
     # get subfield values for repo code
-    repo_code = get_repo_code_values
+    #repo_code = get_repo_code_values
     # creating a subfield hash
-    repo_code.each_key{ |code|
-      position = code.to_s == 'b' ? 2 : 3
-      subfields[position] = get_subfield_hash(code,repo_code[code])
-    }
-    subfields
-  end
+    #repo_code.each_key{ |code|
+      #position = code.to_s == 'b' ? 2 : 3
+      #subfields[position] = get_subfield_hash(code,repo_code[code])
+    #}
+    #subfields
+  #end
 
   def check_multiple_ids
     j_id = @record.aspace_record['id_0']
@@ -291,18 +303,27 @@ class MARCCustomFieldSerialize
     {
         "Clancy Cullen [Offsite]" => "DM",
         "20 Cooper Square [Offsite Prep]" => "OK",
-        "Bobst [Offsite Prep]" => "ON"
+        "Bobst [Offsite Prep]" => "ON",
+        "Haverford [onsite]" => { 'b' => 'hq', 'c' => 'hqmtg'},
+        "FHL [onsite]" => { 'b' => 'sf', 'c' => 'frg' }
     }
   end
 
   def get_location(location_info)
+    subfields = {}
     loc_hsh = location_hsh
     # if location is one of the keys in location_hash,
     # output the value
     # else a blank subfield
-    location = loc_hsh.key?(location_info) ? loc_hsh[location_info] : ''
+    location = loc_hsh.key?(location_info) ? loc_hsh[location_info] : { 'b' => 'empty location', 'c' => 'empty location'}
     # creating a subfield hash
-    get_subfield_hash('s',location)
+    # get_subfield_hash('s',location)
+    subfields[2] = get_subfield_hash('b', location['b'])
+    subfields[3] = get_subfield_hash('c', location['c'])
+    #subfields[2] = get_subfield_hash('b', 'hq')
+    #subfields[3] = get_subfield_hash('c', 'hqmtg')
+
+    subfields
   end
 
   def format_timestamp(type = 'timestamp')

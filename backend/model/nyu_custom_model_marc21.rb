@@ -570,8 +570,8 @@ class MARCModel < ASpaceExport::ExportModel
                     ['541', ind1, ' ', 'a']
                   when 'relatedmaterial'
                     ['544','n']
-                    #when 'bioghist'
-                    #['545','a']
+                  when 'bioghist'
+                    ['545','a']
                   when 'custodhist'
                     ind1 = note['publish'] ? '1' : '0'
                     ['561', ind1, ' ', 'a']

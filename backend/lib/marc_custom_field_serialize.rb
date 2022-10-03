@@ -34,7 +34,7 @@ class MARCCustomFieldSerialize
     extra_fields << add_024_tag
     extra_fields << add_035_tag
 
-    # Only process the 853, 863 and 949 if the records is from tamwag, fales or nyuarchives
+    # Only process the 853, 863 and 949 if the records is from tamwag, fales, nyuarchives, or Poly Archives
     if(get_allowed_values.has_key?(get_record_repo_value)) then
       extra_fields << add_853_tag
       if @record.aspace_record['top_containers']
@@ -198,6 +198,7 @@ class MARCCustomFieldSerialize
     allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
     allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
     allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
+    allowed_values['Poly Archives'] = { b: 'NDIBN', c: 'DARK'}
     allowed_values
   end
 

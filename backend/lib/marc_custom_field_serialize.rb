@@ -199,7 +199,7 @@ class MARCCustomFieldSerialize
     allowed_values['tamwag'] = { b: 'BTAM', c: 'TAM' }
     allowed_values['fales'] = { b: 'BFALE', c: 'FALES'}
     allowed_values['archives'] = { b: 'BARCH', c: 'MAIN' }
-    allowed_values['Poly Archives'] = { b: 'NDIBN', c: 'DARK'}
+    allowed_values['Poly Archives'] = { b: 'NDIBN', c: 'ARCH'}
     allowed_values
   end
 
@@ -262,7 +262,7 @@ class MARCCustomFieldSerialize
   def location_hsh
     {
         "Clancy Cullen [Offsite]" => "DM",
-        "20 Cooper Square [Offsite Prep]" => "OK",
+        "Bern Dibner Library [Offsite Prep]" => "ON",
         "Bobst [Offsite Prep]" => "ON"
     }
   end

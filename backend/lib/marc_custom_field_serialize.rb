@@ -136,10 +136,11 @@ class MARCCustomFieldSerialize
     datafield.add_datafield_tag
   end
   def add_035_tag
-    org_code = get_repo_org_code
-    value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
+    #org_code = get_repo_org_code
+    #value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
+    value="ASpace-Test1"
     subfields_hsh = {}
-    datafield_hsh = get_datafield_hash('035','','')
+    datafield_hsh = get_datafield_hash('035',' ',' ')
     subfields_hsh[1] = get_subfield_hash('a',value)
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
@@ -305,7 +306,8 @@ class MARCCustomFieldSerialize
         "20 Cooper Square [Offsite Prep]" => "OK",
         "Bobst [Offsite Prep]" => "ON",
         "Haverford [onsite]" => { 'b' => 'hq', 'c' => 'hqmtg'},
-        "FHL [onsite]" => { 'b' => 'sf', 'c' => 'frg' }
+        "FHL [onsite]" => { 'b' => 'sf', 'c' => 'frg' },
+        "hq, htman [manuscripts: on-site]" => { 'b' => 'hq', 'c' => 'htman'}
     }
   end
 

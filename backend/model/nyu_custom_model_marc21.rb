@@ -21,7 +21,8 @@ class MARCModel < ASpaceExport::ExportModel
 
   @resource_map = {
     [:id_0, :id_1, :id_2, :id_3] => :handle_id,
-    [:ead_location] => :handle_ead_loc,
+    # TriCo does not want to put the ead url in the 856
+    #[:ead_location] => :handle_ead_loc,
     [:ark_name] => :handle_ark,
     :notes => :handle_notes,
     :finding_aid_description_rules => df_handler('fadr', '040', ' ', ' ', 'e')

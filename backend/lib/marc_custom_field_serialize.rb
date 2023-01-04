@@ -36,7 +36,11 @@ class MARCCustomFieldSerialize
     # Do this on all records
     # TriCo does not want a 024 field
     #extra_fields << add_024_tag
-    extra_fields << add_035_tag
+    #extra_fields << add_035_tag
+    # TriCo customization to add repeating 035 fields
+    extra_fields << add_aspace_system_id
+    extra_fields << add_oclc_id if add_oclc_id != nil
+    extra_fields << add_test_id
 
     # Only process the 853, 863 and 949 if the records is from tamwag, fales, nyuarchives, or Poly Archives
     if(get_allowed_values.has_key?(get_record_repo_value)) then
@@ -137,13 +141,31 @@ class MARCCustomFieldSerialize
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
-  def add_035_tag
+  # TriCo method for add OCLC 035 field
+  def add_oclc_id 
+    oclc_id = nil
+    oclc_id = get_oclc_id
+    if oclc_id != nil
+      add_035_tag(oclc_id)
+    end
+  end
+  # TriCo method for adding ASpace System ID 035 field
+  def add_aspace_system_id 
+    aspace_system_id = get_aspace_system_id
+    add_035_tag(aspace_system_id)
+  end 
+  # TriCo method for adding testing 035 field
+  def add_test_id
+    id = "ASpace-Test2"
+    add_035_tag(id)
+  end
+  # modified by TriCo to allow repeatable 035 fields
+  def add_035_tag(id)
     #org_code = get_repo_org_code
     #value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
-    value="ASpace-Test2"
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('035',' ',' ')
-    subfields_hsh[1] = get_subfield_hash('a',value)
+    subfields_hsh[1] = get_subfield_hash('a',id)
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
@@ -266,6 +288,22 @@ class MARCCustomFieldSerialize
       end
     end
     mms_id
+  end
+  #TriCo method for getting the OCLC number from string_3 field
+  def get_oclc_id 
+    oclc_id = nil
+    if @record.aspace_record.has_key?('user_defined')
+      if @record.aspace_record['user_defined'].has_key?('string_3')
+        oclc_id = @record.aspace_record['user_defined']['string_3']
+      end
+    end
+    oclc_id
+  end
+  #TriCo method for getting ASpace system id
+  def get_aspace_system_id 
+    id = check_multiple_ids
+    repo_org_code = get_repo_org_code
+    aspace_system_id = "(TriCoArchivesSpace)" + "(#{repo_org_code})" + id 
   end
 
   #def process_repo_code

@@ -34,7 +34,8 @@ class MARCCustomFieldSerialize
     @field_pairs = []
 
     # Do this on all records
-    extra_fields << add_024_tag
+    # TriCo does not want a 024 field
+    #extra_fields << add_024_tag
     extra_fields << add_035_tag
 
     # Only process the 853, 863 and 949 if the records is from tamwag, fales, nyuarchives, or Poly Archives

@@ -103,7 +103,7 @@ class MARCModel < ASpaceExport::ExportModel
   def self.from_resource(obj, opts = {})
     marc = self.from_archival_object(obj, opts)
     marc.apply_map(obj, @resource_map)
-    marc.leader_string = "00000np$aa2200000 u 4500"
+    marc.leader_string = "00000np$aa2200000uu 4500"
     marc.leader_string[7] = obj.level == 'item' ? 'm' : 'c'
 
     marc.controlfield_string = assemble_controlfield_string(obj)
@@ -138,6 +138,8 @@ class MARCModel < ASpaceExport::ExportModel
     languages = lang_materials.map {|l| l['language_and_script']}.compact
     langcode = languages.count == 1 ? languages[0]['language'] : 'mul'
 
+    (23-(string.length)).times { string += ' ' }
+    string += 't'
     # variable number of spaces needed since country code could have 2 or 3 chars
     (35-(string.length)).times { string += ' ' }
     string += (langcode || '|||')

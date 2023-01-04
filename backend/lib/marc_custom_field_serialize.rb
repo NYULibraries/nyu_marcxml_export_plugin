@@ -138,7 +138,7 @@ class MARCCustomFieldSerialize
   def add_035_tag
     #org_code = get_repo_org_code
     #value = "(#{get_repo_org_code})#{check_multiple_ids}-#{format_timestamp('date')}"
-    value="ASpace-Test1"
+    value="ASpace-Test2"
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('035',' ',' ')
     subfields_hsh[1] = get_subfield_hash('a',value)

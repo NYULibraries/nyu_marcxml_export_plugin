@@ -139,7 +139,7 @@ class MARCModel < ASpaceExport::ExportModel
     langcode = languages.count == 1 ? languages[0]['language'] : 'mul'
 
     (23-(string.length)).times { string += ' ' }
-    string += 't'
+    string += '|'
     # variable number of spaces needed since country code could have 2 or 3 chars
     (35-(string.length)).times { string += ' ' }
     string += (langcode || '|||')

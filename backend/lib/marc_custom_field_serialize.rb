@@ -22,7 +22,8 @@ class MARCCustomFieldSerialize
     #org_codes = %w(LPA1 LPA2 PHC Pbm PSH PSP BMC HVC QUAKMEET)
     org_code = get_repo_org_code
     cf << add_001_tag if get_mms_id != nil
-    cf << add_003_tag(org_code)
+    # TriCo does not want the 003
+    #cf << add_003_tag(org_code)
     cf << add_005_tag
     @record.controlfields = cf
   end

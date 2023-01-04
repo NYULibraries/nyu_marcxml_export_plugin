@@ -555,43 +555,43 @@ class MARCModel < ASpaceExport::ExportModel
 
       marc_args = case note['type']
 
-                  when 'arrangement', 'fileplan'
-                    ['351', 'b']
-                  when 'odd', 'dimensions', 'physdesc', 'materialspec', 'physloc', 'phystech', 'physfacet', 'processinfo', 'separatedmaterial'
-                    ['500','a']
-                  when 'accessrestrict'
-                    ['506','a']
+                  #when 'arrangement', 'fileplan'
+                    #['351', 'b']
+                  #when 'odd', 'dimensions', 'physdesc', 'materialspec', 'physloc', 'phystech', #'physfacet', 'processinfo', 'separatedmaterial'
+                    #['500','a']
+                  #when 'accessrestrict'
+                    #['506','a']
                     #when 'scopecontent'
                     #['520', '2', ' ', 'a']
                   when 'abstract'
                     ['520', '3', ' ', 'a']
-                  when 'prefercite'
-                    ['524', '8', ' ', 'a']
-                  when 'acqinfo'
-                    ind1 = note['publish'] ? '1' : '0'
-                    ['541', ind1, ' ', 'a']
-                  when 'relatedmaterial'
-                    ['544','n']
+                  #when 'prefercite'
+                    #['524', '8', ' ', 'a']
+                  #when 'acqinfo'
+                    #ind1 = note['publish'] ? '1' : '0'
+                    #['541', ind1, ' ', 'a']
+                  #when 'relatedmaterial'
+                    #['544','n']
                   when 'bioghist'
                     ['545','a']
-                  when 'custodhist'
-                    ind1 = note['publish'] ? '1' : '0'
-                    ['561', ind1, ' ', 'a']
-                  when 'appraisal'
-                    ind1 = note['publish'] ? '1' : '0'
-                    ['583', ind1, ' ', 'a']
-                  when 'accruals'
-                    ['584', 'a']
-                  when 'altformavail'
-                    ['535', '2', ' ', 'a']
-                  when 'originalsloc'
-                    ['535', '1', ' ', 'a']
-                  when 'userestrict', 'legalstatus'
-                    ['540', 'a']
-                  when 'langmaterial'
-                    ['546', 'a']
-                  when 'otherfindaid'
-                    ['555', '0', ' ', 'a']
+                  #when 'custodhist'
+                    #ind1 = note['publish'] ? '1' : '0'
+                    #['561', ind1, ' ', 'a']
+                  #when 'appraisal'
+                    #ind1 = note['publish'] ? '1' : '0'
+                    #['583', ind1, ' ', 'a']
+                  #when 'accruals'
+                    #['584', 'a']
+                  #when 'altformavail'
+                    #['535', '2', ' ', 'a']
+                  #when 'originalsloc'
+                    #['535', '1', ' ', 'a']
+                  #when 'userestrict', 'legalstatus'
+                    #['540', 'a']
+                  #when 'langmaterial'
+                    #['546', 'a']
+                  #when 'otherfindaid'
+                    #['555', '0', ' ', 'a']
                   else
                     nil
                   end

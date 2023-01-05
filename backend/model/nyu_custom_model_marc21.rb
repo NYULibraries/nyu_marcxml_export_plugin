@@ -711,10 +711,10 @@ class MARCModel < ASpaceExport::ExportModel
       ["a", name_parts],
       ["b", number],
       ["c", extras],
+      ["q", fuller_form],
       ["d", dates],
       subfield_e,
-      ["g", qualifier],
-      ["q", fuller_form]
+      ["g", qualifier]
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
 
     unless terms.nil?

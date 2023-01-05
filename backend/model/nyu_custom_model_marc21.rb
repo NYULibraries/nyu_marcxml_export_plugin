@@ -696,6 +696,37 @@ class MARCModel < ASpaceExport::ExportModel
     return value_found
   end
 
+  # name fields looks something this:
+  # [["a", "Dick, Philp K."], ["b", nil], ["c", "see"], ["d", "10-1-1980"], ["g", nil], ["q", nil], ["4", "aut"]]
+  def handle_agent_person_punctuation(name_fields)
+    #The value of subfields g and q must be enclosed in parentheses.
+    ['g', 'q'].each do |sf|
+      index = name_fields.find_index {|a| a[0] == sf}
+      unless !index
+        name_fields[index][1] = "(#{name_fields[index][1]})"
+      end
+    end
+
+    #If subfield $c, $d, or $e is present, the value of the preceding subfield must end in a comma.
+    ['c', 'd', 'e'].each do |subfield|
+      s_index = name_fields.find_index {|a| a[0] == subfield}
+
+      # check if $subfield is present
+      unless !s_index || s_index == 0
+        preceding_index = s_index - 1
+
+        # find preceding field and append a comma if there isn't one there already
+        unless name_fields[preceding_index][1][-1] == ','
+          name_fields[preceding_index][1] << ','
+        end
+      end
+    end
+
+    apply_terminal_punctuation(name_fields)
+
+    return name_fields
+  end
+  
   def gather_agent_person_subfield_mappings(name, role_info, agent, terms=nil)
     joint = name['name_order'] == 'direct' ? ' ' : ', '
     name_parts = [name['primary_name'], name['rest_of_name']].reject {|i| i.nil? || i.empty?}.join(joint)

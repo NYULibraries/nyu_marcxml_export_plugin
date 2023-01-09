@@ -620,7 +620,7 @@ class MARCModel < ASpaceExport::ExportModel
         t << " (#{ext['container_summary']})"
       end
 
-      df!('300').with_sfs(['a', e], ['f', t])
+      df!('300').with_sfs(['a', e], ['f', t.downcase])
     end
   end
 

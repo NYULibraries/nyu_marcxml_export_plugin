@@ -539,6 +539,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   ## plugin -- nyu local handle_notes method def
   def handle_notes(notes)
+    handle_scopecontent(notes)
 
     notes.each do |note|
 
@@ -562,8 +563,8 @@ class MARCModel < ASpaceExport::ExportModel
                     #['500','a']
                   #when 'accessrestrict'
                     #['506','a']
-                    #when 'scopecontent'
-                    #['520', '2', ' ', 'a']
+                  when 'scopecontent'
+                    ['520', '2', ' ', 'a']
                   when 'abstract'
                     ['520', '3', ' ', 'a']
                   #when 'prefercite'
@@ -596,7 +597,7 @@ class MARCModel < ASpaceExport::ExportModel
                   else
                     nil
                   end
-
+      
       unless marc_args.nil?
         text = prefix ? "#{prefix}: " : ""
         text += ASpaceExport::Utils.extract_note_text(note, @include_unpublished, true)
@@ -610,7 +611,28 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
-
+  #TriCo method for prefering the abstract over the scopecontent note if both notes exist
+  def handle_scopecontent(notes)
+    i = -1
+    scopecontent = false
+    abstract = false
+    scopecontent_location = nil
+    notes.each do |note|
+      i += 1
+      if note['type'] == 'scopecontent'
+        scopecontent = true
+        scopecontent_location = i 
+      end
+      if note['type'] == 'abstract'
+        abstract = true
+      end
+    end
+    if abstract == true && scopecontent == true
+      notes.delete_at(scopecontent_location)
+    end
+    return notes
+  end
+          
   def handle_extents(extents)
     extents.each do |ext|
       e = ext['number']

@@ -41,8 +41,9 @@ class MARCCustomFieldSerialize
     extra_fields << add_aspace_system_id
     extra_fields << add_oclc_id if add_oclc_id != nil
     extra_fields << add_test_id
+    extra_fields << add_909_tag
 
-    # Only process the 853, 863 and 949 if the records is from tamwag, fales, nyuarchives, or Poly Archives
+    # Only process the 853, 863 and 912 if the records is from tamwag, fales, nyuarchives, or Poly Archives
     if(get_allowed_values.has_key?(get_record_repo_value)) then
       extra_fields << add_853_tag
       if @record.aspace_record['top_containers']
@@ -52,16 +53,16 @@ class MARCCustomFieldSerialize
           loc = info[:location]
           #if(info[:barcode] != nil && loc != nil && /Flat file/.match?(loc) != true && /Flat File/.match?(loc) != true ) then
             #@field_pairs << add_863_tag(info)
-            #@field_pairs << add_949_tag(info)
+            #@field_pairs << add_912_tag(info)
           #end
           @field_pairs << add_863_tag(info)
-          @field_pairs << add_949_tag(info)
+          @field_pairs << add_912_tag(info)
         }
       end
     end
 
     @sort_combined = (@record.datafields + extra_fields).sort_by(&:tag)
-    # 863 and 949 pairs are not to be sorted
+    # 863 and 912 pairs are not to be sorted
     # sticking them at the end since the highest tag
     # before 863 is 856
     # this is a hard coded assumption but it's faster
@@ -201,10 +202,21 @@ class MARCCustomFieldSerialize
     datafield.add_datafield_tag
   end
 
-  def add_949_tag(info)
-
+  #TriCo method for adding a 909 field
+  def add_909_tag 
     subfields_hsh = {}
-    datafield_hsh = get_datafield_hash('949','0','')
+    datafield_hsh = get_datafield_hash('909','0','0')
+    # have to have a hash by position as the key
+    # since the subfield positions matter
+    subfields_hsh[1] = get_subfield_hash('a','This bibliographic record is part of the TriCo ASpace-Alma integration. Edits should be made to the finding aid in ASpace.')
+    datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
+    datafield.add_datafield_tag
+  end
+
+  #TriCo changed this from 949 to 912 field
+  def add_912_tag(info)
+    subfields_hsh = {}
+    datafield_hsh = get_datafield_hash('912','0','')
     # have to have a hash by position as the key
     # since the subfield positions matter
     #subfields_hsh[1] = get_subfield_hash('a','NNU')

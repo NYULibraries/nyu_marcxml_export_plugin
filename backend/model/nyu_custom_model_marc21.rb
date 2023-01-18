@@ -1,3 +1,5 @@
+require 'logger'
+
 class MARCModel < ASpaceExport::ExportModel
   model_for :marc21
 
@@ -459,17 +461,23 @@ class MARCModel < ASpaceExport::ExportModel
     end
   end
 
-  ## plugin -- nyu local handle_agents method def
+ 
+
   def handle_agents(linked_agents)
     handle_primary_creator(linked_agents)
     handle_other_creators(linked_agents)
 
+    logger = Logger.new(STDOUT)
+
     subjects = linked_agents.select {|a| a['role'] == 'subject'}
+    
+    logger.info { subjects }
 
     subjects.each_with_index do |link, i|
+      next unless link["_resolved"]["publish"] || @include_unpublished
+
       subject = link['_resolved']
       name = subject['display_name']
-      relator = link['relator']
       terms = link['terms']
       ind2 = source_to_code(name['source'])
 
@@ -477,66 +485,45 @@ class MARCModel < ASpaceExport::ExportModel
       if link['relator']
         handle_relators(relator_sfs, link['relator'])
       end
+      
+      logger = Logger.new(STDOUT)
 
       case subject['agent_type']
-
+      
       when 'agent_corporate_entity'
         code = '610'
         ind1 = '2'
-        sfs = [
-          ['a', name['primary_name']],
-          ['b', name['subordinate_name_1']],
-          ['b', name['subordinate_name_2']],
-          ['n', name['number']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, subject, terms)
+        logger.info "610: name: #{name}, relators: #{relator_sfs}, subject: #{subject}, terms: #{terms}"
 
       when 'agent_person'
-        joint, ind1 = name['name_order'] == 'direct' ? [' ', '0'] : [', ', '1']
-        name_parts = [name['primary_name'], name['rest_of_name']].reject{|i| i.nil? || i.empty?}.join(joint)
-        ind1 = name['name_order'] == 'direct' ? '0' : '1'
+        ind1  = name['name_order'] == 'direct' ? '0' : '1'
         code = '600'
-        sfs = [
-          ['a', name_parts],
-          ['b', name['number']],
-          ['c', %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ')],
-          ['q', name['fuller_form']],
-          ['d', name['dates']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_person_subfield_mappings(name, relator_sfs, subject, terms)
 
       when 'agent_family'
         code = '600'
         ind1 = '3'
-        sfs = [
-          ['a', name['family_name']],
-          ['c', name['prefix']],
-          ['d', name['dates']],
-          ['g', name['qualifier']],
-        ]
+        sfs = gather_agent_family_subfield_mappings(name, relator_sfs, subject, terms)
+
+      when 'agent_software'
+        code = '653'
+        ind1 = ' '
+        sfs = [['a', name['software_name']]]
 
       end
 
-      terms.each do |t|
-        tag = case t['term_type']
-              when 'uniform_title'; 't'
-              when 'genre_form', 'style_period'; 'v'
-              when 'topical', 'cultural_context'; 'x'
-              when 'temporal'; 'y'
-              when 'geographic'; 'z'
-              end
-        sfs << [(tag), t['term']]
-      end
+      # ANW-825: Don't export $0 if $v, $x, $y, or $z are present
+      sfs.reject! {|k| k[0] == 0 } if (['v', 'x', 'y', 'z'] - sfs.map { |k| k[0] }).length < 4
 
       if ind2 == '7'
-        create_sfs2 = %w(local ingest)
-        sfs << ['2', 'local'] if create_sfs2.include?(subject['display_name']['source'])
+        sfs << ['2', subject['names'].first['source']]
       end
 
       df(code, ind1, ind2, i).with_sfs(*sfs)
     end
   end
-
+  
   ## plugin -- nyu local handle_notes method def
   def handle_notes(notes)
     handle_scopecontent(notes)
@@ -683,7 +670,7 @@ class MARCModel < ASpaceExport::ExportModel
     # as long as it is not $0, $2, or $4 which don't receive
     # terminal punctuation.
     sub_store = name_fields.reject! {|x| [0, 2, 4].include?(x[0][0]) }
-    unless ['.', ')'].include?(name_fields[-1][1][-1])
+    unless ['.', ')', ',', '-'].include?(name_fields[-1][1][-1])
       name_fields[-1][1] << "."
     end
 
@@ -752,13 +739,14 @@ class MARCModel < ASpaceExport::ExportModel
   def gather_agent_person_subfield_mappings(name, role_info, agent, terms=nil)
     joint = name['name_order'] == 'direct' ? ' ' : ', '
     name_parts = [name['primary_name'], name['rest_of_name']].reject {|i| i.nil? || i.empty?}.join(joint)
-
     subfield_e, subfield_4 = prepare_role_subfields(role_info)
+    
     number      = name['number'] rescue nil
     extras      = %w(prefix title suffix).map {|prt| name[prt]}.compact.join(', ') rescue nil
     dates       = name['dates'] rescue nil
     qualifier   = name['qualifier'] rescue nil
     fuller_form = name['fuller_form'] rescue nil
+    
 
     name_fields = [
       ["a", name_parts],
@@ -770,9 +758,28 @@ class MARCModel < ASpaceExport::ExportModel
       ["g", qualifier]
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
 
+    logger = Logger.new(STDOUT)
+    logger.info { "agent person name fields"}
+    logger.info { name_fields.concat }
     unless terms.nil?
       name_fields.concat handle_agent_terms(terms)
     end
+
+    # TriCo hack for fixing a problem that was happening when an agent had roles of both creator and subject. For some reason a comma was being added to the last field in name_fields. I still have not figured out why the comma is being added. Here, I am simply chopping it off.
+    last_name_field = name_fields[-1][-1]
+    if last_name_field.end_with?(",")
+      last_name_field_chopped = last_name_field.chop
+      name_fields[-1] = name_fields[-1].map do |n|
+        if n == last_name_field
+          n = last_name_field_chopped
+        else
+         n   
+        end 
+      end  
+    end
+
+    logger.info {"chopped name_fields"}
+    logger.info {name_fields}
 
     name_fields = handle_agent_person_punctuation(name_fields)
     name_fields.push(subfield_4) unless subfield_4.nil?
@@ -858,8 +865,13 @@ class MARCModel < ASpaceExport::ExportModel
     #If subfield $e is present, the value of the preceding subfield must end in a comma.
     #If subfield $n is present, the value of the preceding subfield must end in a comma.
     #If subfield $g is present, the value of the preceding subfield must end in a comma.
+    logger_sec = Logger.new(STDOUT)
     ['e', 'n', 'g'].each do |subfield|
       s_index = name_fields.find_index {|a| a[0] == subfield}
+      
+      logger_sec.info {"laurin test"}
+      logger_sec.info { subfield }
+      logger_sec.info { name_fields }
 
       # check if $subfield is present
 
@@ -883,8 +895,8 @@ class MARCModel < ASpaceExport::ExportModel
       unless !s_index
 
         # find field and append a period if there isn't one there already
-        unless name_fields[s_index][1][-1] == "." || name_fields[s_index][1][-1] == ","
-          name_fields[s_index][1] << "."
+        unless ['.', ')', ',', '-'].include?(name_fields[s_index][1][-1])
+          name_fields[-1][1] << "."
         end
       end
     end
@@ -895,6 +907,7 @@ class MARCModel < ASpaceExport::ExportModel
   end
 
   def gather_agent_corporate_subfield_mappings(name, role_info, agent, terms=nil)
+    logger = Logger.new(STDOUT)
     subfield_e, subfield_4 = prepare_role_subfields(role_info)
     primary_name = name['primary_name'] rescue nil
     sub_name1    = name['subordinate_name_1'] rescue nil
@@ -927,6 +940,21 @@ class MARCModel < ASpaceExport::ExportModel
       ['n', number],
       ['g', qualifier]
     ].compact.reject {|a| a[1].nil? || a[1].empty?}
+    
+    # TriCo hack for fixing a problem that was happening when an agent had roles of both creator and subject. For some reason a comma was being added to the last field in name_fields. I still have not figured out why the comma is being added. Here, I am simply chopping it off.
+    last_name_field = name_fields[-1][-1]
+    if last_name_field.end_with?(",")
+      last_name_field_chopped = last_name_field.chop
+      name_fields[-1] = name_fields[-1].map do |n|
+        if n == last_name_field
+          n = last_name_field_chopped
+        else
+         n   
+        end 
+      end  
+    end
+    
+    logger.info { name_fields }
 
     unless terms.nil?
       name_fields.concat handle_agent_terms(terms)

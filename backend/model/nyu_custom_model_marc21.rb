@@ -351,6 +351,9 @@ class MARCModel < ASpaceExport::ExportModel
         sfs << [tag, t['term']]
       end
 
+      #TriCo adding punctuation
+      sfs = apply_terminal_punctuation_subjects(sfs)
+
       # code borrowed from Yale to export subject authority id
       unless subject['authority_id'].nil?
         sfs << ['0', subject['authority_id']]
@@ -676,6 +679,15 @@ class MARCModel < ASpaceExport::ExportModel
     end
 
     name_fields.push(sub_store) unless sub_store.nil?
+  end
+
+  # TriCo function for adding periods to end of 650s, 651s, and 655s
+  def apply_terminal_punctuation_subjects(sfs)
+    unless ['.', ')', ',', '-'].include?(sfs[-1][1][-1])
+      sfs[-1][1] << "."
+    end
+
+    return sfs
   end
 
 

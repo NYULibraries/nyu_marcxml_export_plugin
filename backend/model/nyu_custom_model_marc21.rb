@@ -697,6 +697,8 @@ class MARCModel < ASpaceExport::ExportModel
       subfield_4 = nil
     else
       subfield_e = role_info.select { |k| k[0]=="e" }.flatten
+      #TriCo making sure relator field is lowercase
+      subfield_e[1] = subfield_e[1].downcase
       subfield_4 = role_info.select { |k| k[0]=="4" }.flatten
     end
 

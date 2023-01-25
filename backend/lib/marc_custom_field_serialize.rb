@@ -239,10 +239,10 @@ class MARCCustomFieldSerialize
 
   def get_repo_org_code
     alma_org_codes = {
-      'PSC-P' => 'PSP', 
-      'PSH' => 'PSH', 
-      'Pbm' => 'BMC', 
-      'PHC' =>'HVC',
+      'PSC-P' => 'PSC-P', 
+      'PSH' => 'PSC-Hi', 
+      'PBm' => 'PBm', 
+      'PHC' =>'PHC',
       'QUAKMEET' => 'QUAKMEET',
       'LPA1' => 'LPA1',
       'LPA2' => 'LPA2'
@@ -314,8 +314,8 @@ class MARCCustomFieldSerialize
   #TriCo method for getting ASpace system id
   def get_aspace_system_id 
     id = check_multiple_ids
-    repo_org_code = get_repo_org_code
-    aspace_system_id = "(TriCoArchivesSpace)" + "(#{repo_org_code})" + id 
+    org_code = @record.aspace_record['repository']['_resolved']['org_code']
+    aspace_system_id = "(TriCoArchivesSpace)" + "(#{org_code})" + id 
   end
 
   #def process_repo_code

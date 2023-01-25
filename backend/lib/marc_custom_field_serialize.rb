@@ -45,7 +45,8 @@ class MARCCustomFieldSerialize
 
     # Only process the 853, 863 and 912 if the records is from tamwag, fales, nyuarchives, or Poly Archives
     if(get_allowed_values.has_key?(get_record_repo_value)) then
-      extra_fields << add_853_tag
+      # TriCo removing 853
+      #extra_fields << add_853_tag
       if @record.aspace_record['top_containers']
         top_containers = @record.aspace_record['top_containers']
         top_containers.each_key{ |id|
@@ -55,7 +56,8 @@ class MARCCustomFieldSerialize
             #@field_pairs << add_863_tag(info)
             #@field_pairs << add_912_tag(info)
           #end
-          @field_pairs << add_863_tag(info)
+          #TriCo removing 863
+          #@field_pairs << add_863_tag(info)
           @field_pairs << add_912_tag(info)
         }
       end

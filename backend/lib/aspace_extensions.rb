@@ -30,7 +30,12 @@ module ExportHelpers
     TopContainer.search_stream(search_params,repo_id) do |response|
       top_container_results = JSON.parse(response.body)
     end
+    logger = Logger.new(STDOUT)
+    logger.info { "top container results:"}
+    logger.info { top_container_results }
+
     top_container_results
+    
   end
 
   def process_top_containers
@@ -46,6 +51,10 @@ module ExportHelpers
       if data['barcode']
         barcode = { barcode: data['barcode'] }
         hash = hash.merge(barcode)
+      end
+      if data['type']
+        type = { type: data['type'] }
+        hash = hash.merge(type)
       end
       tc_info[id] = hash
 

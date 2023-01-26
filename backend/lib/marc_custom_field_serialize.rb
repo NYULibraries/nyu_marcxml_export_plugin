@@ -215,7 +215,7 @@ class MARCCustomFieldSerialize
     datafield.add_datafield_tag
   end
 
-  #TriCo changed this from 949 to 912 field
+  #TriCo changed this from 949 to 912 field and tweaked subfields, could clean this up
   def add_912_tag(info)
     subfields_hsh = {}
     datafield_hsh = get_datafield_hash('912','0','')
@@ -224,14 +224,14 @@ class MARCCustomFieldSerialize
     #subfields_hsh[1] = get_subfield_hash('a','NNU')
     # I don't think that I need subfield a? LP
     #subfields_hsh[1] = get_subfield_hash('a','HVC')
-    subfields_hsh[4] = get_subfield_hash('t','4')
+    #subfields_hsh[4] = get_subfield_hash('t','4')
     subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
-    subfields_hsh[7] = get_subfield_hash('i','04')
+    #subfields_hsh[7] = get_subfield_hash('i','04')
     #subfields_hsh[8] = get_location(info[:location])
-    subfields_hsh[8] = get_subfield_hash('s','fake shelf location')
+    #subfields_hsh[8] = get_subfield_hash('s','fake shelf location')
     subfields_hsh[9] = get_subfield_hash('p',info[:barcode]) if info[:barcode]
-    subfields_hsh[10] = get_subfield_hash('w',"Box #{info[:indicator]}")
+    subfields_hsh[10] = get_subfield_hash('w',"#{info[:type]} #{info[:indicator]}")
     subfields_hsh[11] = get_subfield_hash('e',info[:indicator])
     # merge repo code hash with existing subfield code hash
     subfields_hsh.merge!(get_location(info[:location]))
@@ -361,7 +361,9 @@ class MARCCustomFieldSerialize
         "Bobst [Offsite Prep]" => "ON",
         "Haverford [onsite]" => { 'b' => 'hq', 'c' => 'hqmtg'},
         "FHL [onsite]" => { 'b' => 'sf', 'c' => 'frg' },
-        "hq, htman [manuscripts: on-site]" => { 'b' => 'hq', 'c' => 'htman'}
+        "hq, htman [manuscripts: on-site]" => { 'b' => 'hq', 'c' => 'htman'},
+        "Lutnick Library, 1, Closed Stacks [Closed Stacks: 1]" => { 'b' => 'hq', 'c' => 'htman'},
+        "SCPC [off-site]" => { 'b' => 'sp', 'c'=>'poff' }
     }
   end
 

@@ -159,7 +159,7 @@ class MARCCustomFieldSerialize
   end 
   # TriCo method for adding testing 035 field
   def add_test_id
-    id = "ASpace-Test2"
+    id = "ASpace-Test3"
     add_035_tag(id)
   end
   # modified by TriCo to allow repeatable 035 fields
@@ -244,10 +244,7 @@ class MARCCustomFieldSerialize
       'PSC-P' => 'PSC-P', 
       'PSH' => 'PSC-Hi', 
       'PBm' => 'PBm', 
-      'PHC' =>'PHC',
-      'QUAKMEET' => 'QUAKMEET',
-      'LPA1' => 'LPA1',
-      'LPA2' => 'LPA2'
+      'PHC' =>'PHC'
     }
     org_code = @record.aspace_record['repository']['_resolved']['org_code']
     alma_org_codes[org_code]
@@ -266,6 +263,7 @@ class MARCCustomFieldSerialize
     allowed_values['lparchive'] = { b: 'sm', c: 'st' }
     allowed_values['lparchive2'] = { b: 'br', c: 'brarc'}
     allowed_values['Bryn Mawr'] = { b: 'br', c: 'brarc'}
+    allowed_values['FHL'] = { b: 'sf', c: 'frg'}
     allowed_values['Haverford'] = { b: 'hq', c: 'htman'}
     allowed_values['SCPC'] = { b: 'sp', c: 'pacb' }
     allowed_values['QuakMeet'] = { b: 'hq', c: 'hqmtg'}
@@ -363,7 +361,9 @@ class MARCCustomFieldSerialize
         "FHL [onsite]" => { 'b' => 'sf', 'c' => 'frg' },
         "hq, htman [manuscripts: on-site]" => { 'b' => 'hq', 'c' => 'htman'},
         "Lutnick Library, 1, Closed Stacks [Closed Stacks: 1]" => { 'b' => 'hq', 'c' => 'htman'},
-        "SCPC [off-site]" => { 'b' => 'sp', 'c'=>'poff' }
+        "SCPC [off-site]" => { 'b' => 'sp', 'c'=>'poff' },
+        "FHL, multi, Record Groups [frg]" => { 'b' => 'sf', 'c' => 'frg' },
+        "Canaday Library [1st floor: RBR]" => { 'b' => 'br', 'c' => 'brarc' }
     }
   end
 

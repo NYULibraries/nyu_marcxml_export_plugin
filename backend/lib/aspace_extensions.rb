@@ -52,10 +52,21 @@ module ExportHelpers
         barcode = { barcode: data['barcode'] }
         hash = hash.merge(barcode)
       end
+
+      #TriCo additions to the location
       if data['type']
         type = { type: data['type'] }
         hash = hash.merge(type)
       end
+      if data['container_locations'][0]['_resolved']['building']
+        building = { building: data['container_locations'][0]['_resolved']['building'] }
+        hash = hash.merge(building)
+      end
+      if data['container_locations'][0]['_resolved']['classification']
+        location_code = { location_code: data['container_locations'][0]['_resolved']['classification']}
+        hash = hash.merge(location_code)
+      end
+
       tc_info[id] = hash
 
       # Checking for nil location

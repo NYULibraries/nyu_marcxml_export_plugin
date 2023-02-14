@@ -159,7 +159,7 @@ class MARCCustomFieldSerialize
   end 
   # TriCo method for adding testing 035 field
   def add_test_id
-    id = "ASpace-Test3"
+    id = "ASpace-Test4"
     add_035_tag(id)
   end
   # modified by TriCo to allow repeatable 035 fields
@@ -224,6 +224,8 @@ class MARCCustomFieldSerialize
     #subfields_hsh[1] = get_subfield_hash('a','NNU')
     # I don't think that I need subfield a? LP
     #subfields_hsh[1] = get_subfield_hash('a','HVC')
+    subfields_hsh[2] = get_subfield_hash('b', info[:building])
+    subfields_hsh[3] = get_subfield_hash('c', info[:location_code])
     #subfields_hsh[4] = get_subfield_hash('t','4')
     subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
@@ -232,9 +234,9 @@ class MARCCustomFieldSerialize
     #subfields_hsh[8] = get_subfield_hash('s','fake shelf location')
     subfields_hsh[9] = get_subfield_hash('p',info[:barcode]) if info[:barcode]
     subfields_hsh[10] = get_subfield_hash('w',"#{info[:type]} #{info[:indicator]}")
-    subfields_hsh[11] = get_subfield_hash('e',info[:indicator])
+    #subfields_hsh[11] = get_subfield_hash('e',info[:indicator])
     # merge repo code hash with existing subfield code hash
-    subfields_hsh.merge!(get_location(info[:location]))
+    #subfields_hsh.merge!(get_location(info[:location]))
     datafield = NYUCustomTag.new(datafield_hsh,subfields_hsh)
     datafield.add_datafield_tag
   end
@@ -363,7 +365,7 @@ class MARCCustomFieldSerialize
         "Lutnick Library, 1, Closed Stacks [Closed Stacks: 1]" => { 'b' => 'hq', 'c' => 'htman'},
         "SCPC [off-site]" => { 'b' => 'sp', 'c'=>'poff' },
         "FHL, multi, Record Groups [frg]" => { 'b' => 'sf', 'c' => 'frg' },
-        "Canaday Library [1st floor: RBR]" => { 'b' => 'br', 'c' => 'brarc' }
+        "br [brarc, 1st floor: RBR]" => { 'b' => 'br', 'c' => 'brarc' }
     }
   end
 

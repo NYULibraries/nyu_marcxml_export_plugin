@@ -172,7 +172,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   def handle_id(*ids)
     ids.reject! {|i| i.nil? || i.empty?}
-    df('099', ' ', ' ').with_sfs(['a', ids.join('.')])
+    df('086', ' ', ' ').with_sfs(['a', ids.join('.')])
   end
 
 

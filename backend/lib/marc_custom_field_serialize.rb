@@ -227,7 +227,7 @@ class MARCCustomFieldSerialize
     subfields_hsh[2] = get_subfield_hash('b', info[:building])
     subfields_hsh[3] = get_subfield_hash('c', info[:location_code])
     #subfields_hsh[4] = get_subfield_hash('t','4')
-    subfields_hsh[5] = generate_subfield_j
+    #subfields_hsh[5] = generate_subfield_j
     subfields_hsh[6] = get_subfield_hash('m','MIXED')
     #subfields_hsh[7] = get_subfield_hash('i','04')
     #subfields_hsh[8] = get_location(info[:location])

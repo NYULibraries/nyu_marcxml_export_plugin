@@ -172,7 +172,7 @@ class MARCModel < ASpaceExport::ExportModel
 
   def handle_id(*ids)
     ids.reject! {|i| i.nil? || i.empty?}
-    df('086', ' ', ' ').with_sfs(['a', ids.join('.')])
+    df('099', ' ', ' ').with_sfs(['a', ids.join('.')])
   end
 
 
@@ -494,10 +494,17 @@ class MARCModel < ASpaceExport::ExportModel
       case subject['agent_type']
       
       when 'agent_corporate_entity'
-        code = '610'
-        ind1 = '2'
-        sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, subject, terms)
-        logger.info "610: name: #{name}, relators: #{relator_sfs}, subject: #{subject}, terms: #{terms}"
+        #TriCo addition of 611
+        if subject['names'][0]['conference_meeting'] == true
+          code = '611'
+          ind1 = '2'
+          sfs = gather_agent_meeting_subfield_mappings(name, relator_sfs, subject, terms)
+        else
+          code = '610'
+          ind1 = '2'
+          sfs = gather_agent_corporate_subfield_mappings(name, relator_sfs, subject, terms)
+        end
+        logger.info "610/611: name: #{name}, relators: #{relator_sfs}, subject: #{subject}, terms: #{terms}"
 
       when 'agent_person'
         ind1  = name['name_order'] == 'direct' ? '0' : '1'
@@ -675,6 +682,9 @@ class MARCModel < ASpaceExport::ExportModel
     # as long as it is not $0, $2, or $4 which don't receive
     # terminal punctuation.
     sub_store = name_fields.reject! {|x| [0, 2, 4].include?(x[0][0]) }
+    logger = Logger.new(STDOUT)
+    logger.info { "name fields before terminal punctuation "}
+    logger.info { name_fields }
     unless ['.', ')', ',', '-'].include?(name_fields[-1][1][-1])
       name_fields[-1][1] << "."
     end
@@ -922,6 +932,65 @@ class MARCModel < ASpaceExport::ExportModel
     return name_fields
   end
 
+  # TriCo function for meeting types
+  def handle_agent_meeting_punctuation(name_fields)
+    d_index = name_fields.find_index { |a| a[0] == "d" }
+    c_index = name_fields.find_index { |a| a[0] == "c" }
+    n_index = name_fields.find_index {|a| a[0] == "n"}
+
+    # logic for dealing with different subfield combinations and their punctuation
+    # n, c, d exist
+    if !n_index.nil? && !c_index.nil? && !d_index.nil?
+      name_fields[n_index][1] = "(#{name_fields[n_index][1]} : "
+      name_fields[d_index][1] = "#{name_fields[d_index][1]} : "
+      name_fields[c_index][1] = "#{name_fields[c_index][1]})"
+    # just n and c exist
+    elsif !n_index.nil? && !c_index.nil? 
+      name_fields[n_index][1] = "(#{name_fields[n_index][1]} : "
+      name_fields[c_index][1] = "#{name_fields[c_index][1]})"
+    # just n and d exist
+    elsif !n_index.nil? && !d_index.nil?
+      name_fields[n_index][1] = "(#{name_fields[n_index][1]} : "
+      name_fields[d_index][1] = "#{name_fields[d_index][1]})"
+    # just n exists
+    elsif !n_index.nil?
+      name_fields[n_index][1] = "(#{name_fields[n_index][1]})"
+    # just c and d exists
+    elsif !c_index.nil? && !d_index.nil?
+      name_fields[d_index][1] = "(#{name_fields[d_index][1]} : "
+      name_fields[c_index][1] = "#{name_fields[c_index][1]})"
+    # just c exists
+    elsif !c_index.nil?
+      name_fields[c_index][1] = "(#{name_fields[c_index][1]})"
+    # just d exists
+    elsif !d_index.nil?
+      name_fields[d_index][1] = "(#{name_fields[d_index][1]})"
+    end
+
+    # if there are multiple locations, create repeatable c subfields
+    if !c_index.nil?
+      location_text = name_fields[c_index][1]
+      # multiple locations are separated by a semi-colon
+      if location_text.include?(";")
+        locations_array = location_text.split(";", -1)
+        # replace the first subfield c with first location in list
+        name_fields[c_index][1] = "#{locations_array[0]};"
+        # go through remaining locations and add more subfield c's to name_fields
+        index = 1
+        while index < locations_array.length-1
+          name_fields << ["c", "#{locations_array[index].lstrip};"]
+          index += 1
+        end
+        # the very last location does not need a semi-colon
+        name_fields << ["c", locations_array[-1].lstrip]
+      end
+    end
+
+    apply_terminal_punctuation(name_fields)
+
+    return name_fields
+  end
+
   def gather_agent_corporate_subfield_mappings(name, role_info, agent, terms=nil)
     logger = Logger.new(STDOUT)
     subfield_e, subfield_4 = prepare_role_subfields(role_info)
@@ -985,5 +1054,54 @@ class MARCModel < ASpaceExport::ExportModel
 
     return name_fields
   end
+  
+  # TriCo method for creating 611s, basically copied from 610 with additional fields
+  def gather_agent_meeting_subfield_mappings(name, role_info, agent, terms=nil)
+    logger = Logger.new(STDOUT)
+    subfield_e, subfield_4 = prepare_role_subfields(role_info)
+    primary_name = name['primary_name'] rescue nil
+    number       = name['number'] rescue nil
+    location     = name['location'] rescue nil
+    dates        = name['dates'] rescue nil
+    
 
+    name_fields = [
+      ['a', primary_name],
+      subfield_e,
+      ['n', number],
+      ['d', dates],
+      ['c', location],
+      
+    ].compact.reject {|a| a[1].nil? || a[1].empty?}
+
+    
+    # TriCo hack for fixing a problem that was happening when an agent had roles of both creator and subject. For some reason a comma was being added to the last field in name_fields. I still have not figured out why the comma is being added. Here, I am simply chopping it off.
+    last_name_field = name_fields[-1][-1]
+    if last_name_field.end_with?(",")
+      last_name_field_chopped = last_name_field.chop
+      name_fields[-1] = name_fields[-1].map do |n|
+        if n == last_name_field
+          n = last_name_field_chopped
+        else
+         n   
+        end 
+      end  
+    end
+    
+    logger.info {"****name fields****"}
+    logger.info { name_fields }
+
+    unless terms.nil?
+      name_fields.concat handle_agent_terms(terms)
+    end
+
+    name_fields = handle_agent_meeting_punctuation(name_fields)
+    name_fields.push(subfield_4) unless subfield_4.nil?
+
+    authority_id = find_authority_id(agent['names'])
+    subfield_0 = authority_id ? [0, authority_id] : nil
+    name_fields.push(subfield_0) unless subfield_0.nil?
+
+    return name_fields
+  end
 end

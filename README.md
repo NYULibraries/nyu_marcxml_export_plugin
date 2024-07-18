@@ -1,4 +1,4 @@
-# nyu_marcxml_export_plugin, v.3.0.2.2
+# nyu_marcxml_export_plugin, v.3.4.1.1
 An Archives Space plugin to export resource and item level records to marcxml
 
 ## Scope
@@ -21,3 +21,4 @@ The way to override the default functionality is to find the method/model where 
        * nyu_custom_serializer_marc21.rb: had to tweak the default functionality of this code since the plugin was adding extra controlfields. The default functionality had hardcoded the controlfields
     * spec:
        * export_custom_marc_spec.rb: contains tests that checked a version of the marc export. Needs to be updated to reflect current output
+ * frontend: files to display version information from the plugin menu from the front-end

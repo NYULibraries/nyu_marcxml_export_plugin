@@ -353,7 +353,7 @@ class MARCModel < ASpaceExport::ExportModel
 
       
       # N.B. ind2 is an array at this point.
-      if ind2[0] == '7'
+      if ind2[1] == '7'
         sfs << ['2', subject['source']]
       end
 

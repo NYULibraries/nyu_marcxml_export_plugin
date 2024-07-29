@@ -1,4 +1,4 @@
-# nyu_marcxml_export_plugin, v.3.4.1.1
+# nyu_marcxml_export_plugin, v.3.4.1.2
 An Archives Space plugin to export resource and item level records to marcxml
 
 ## Scope
